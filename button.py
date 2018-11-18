@@ -33,6 +33,11 @@ class Button:
     def clear_draw_button(self):
         self.__draw__(self.lcd.rgb(0, 0, 0), self.lcd.rgb(0, 0, 0))
 
+    def is_touched(self, x, y):
+        if x > self.x and x < self.x + self.width and y > self.y and y < self.y + self.height:
+            return True
+        return False
+
     #redefine by child
     def handler():
         pass
