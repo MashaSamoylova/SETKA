@@ -21,6 +21,7 @@ class Button:
         self.lcd.set_pen(fg, bg)
         self.lcd.rect(self.x, self.y, self.width, self.height)
         self.lcd.set_pos(self.text_position_x, self.text_position_y)
+        self.lcd.set_font(1, scale=1, bold=0, trans=0, scroll=0)
         self.lcd.write(self.text)
 
     def draw_button(self):
