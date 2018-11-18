@@ -27,7 +27,7 @@ class Screen:
         self.strings = [EditableLable(lcd, 45, y, "000.0", 100) for y in range(45, 106, 20)]
 
     def draw(self):
-        """Draw tab buttons"""
+        """Draw tab buttons, call draw on tabs"""
 
         for i, tab in enumerate([self.tab1, self.tab2, self.tab3]):
             if i == self.tab_number:

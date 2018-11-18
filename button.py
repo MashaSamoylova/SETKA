@@ -17,7 +17,7 @@ class Button:
         self.text_position_x = self.x + self.width // 2 - len(self.text)//2 - 5
         self.text_position_y = self.y + self.height // 2 - 5
 
-    def __draw__(self, fg, bg):
+    def __draw(self, fg, bg):
         self.lcd.set_text_color(fg, bg)
         self.lcd.set_pen(fg, bg)
         self.lcd.rect(self.x, self.y, self.width, self.height)
@@ -26,18 +26,16 @@ class Button:
         self.lcd.write(self.text)
 
     def draw(self):
-        self.__draw__(self.lcd.rgb(255, 255, 255), self.lcd.rgb(0, 0, 0))
+        self.__draw(self.lcd.rgb(255, 255, 255), self.lcd.rgb(0, 0, 0))
 
     def draw_touched_button(self):
-        self.__draw__(self.lcd.rgb(0, 0, 0), self.lcd.rgb(255, 255, 255))
+        self.__draw(self.lcd.rgb(0, 0, 0), self.lcd.rgb(255, 255, 255))
         
     def clear_draw_button(self):
-        self.__draw__(self.lcd.rgb(0, 0, 0), self.lcd.rgb(0, 0, 0))
+        self.__draw(self.lcd.rgb(0, 0, 0), self.lcd.rgb(0, 0, 0))
 
     def is_touched(self, x, y):
-        if x > self.x and x < self.x + self.width and y > self.y and y < self.y + self.height:
-            return True
-        return False
+        return x > self.x and x < self.x + self.width and y > self.y and y < self.y + self.height
 
     #redefine by child
     def handler():
