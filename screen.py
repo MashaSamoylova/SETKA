@@ -1,5 +1,5 @@
 from button import Button
-from label import Label
+from label import EditableLable
 
 def handler_tab1_button():
     return 1
@@ -23,29 +23,18 @@ class Screen:
         self.tab3_button = Button(lcd, 84, 0, 42, 40, "3")
         self.tab3_button.set_handler(handler_tab3_button)
         
-        self.string1 = Label(lcd, 45, 45, "000.0", 100)
-        self.string2 = Label(lcd, 45, 65, "000.0", 100)
-        self.string3 = Label(lcd, 45, 85, "000.0", 100)
-        self.string4 = Label(lcd, 45, 105, "000.0", 100)
+        #4 strings that display engines speeds
+        self.strings = [EditableLable(lcd, 45, y, "000.0", 100) for y in range(45, 106, 20)]
 
     def draw(self):
-        if self.tab_number == 1:
-            self.tab1_button.draw_touched_button()
-            self.tab2_button.draw()
-            self.tab3_button.draw()
-        elif self.tab_number == 2:
-            self.tab1_button.draw()
-            self.tab2_button.draw_touched_button()
-            self.tab3_button.draw()
-        elif self.tab_number == 3:
-            self.tab1_button.draw()
-            self.tab2_button.draw()
-            self.tab3_button.draw_touched_button()
+        """Draw tab buttons, call draw on tabs"""
 
-        self.string1.draw()
-        self.string2.draw()
-        self.string3.draw()
-        self.string4.draw()
+        for i, tab in enumerate([self.tab1, self.tab2, self.tab3]):
+            if i == self.tab_number:
+                tab.draw_touched_button
+            else:
+                tab.draw()
+        for string in self.strings: string.draw()
 
     def handler(self):
         touch, x, y = self.lcd.get_touch()
