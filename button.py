@@ -4,6 +4,7 @@ import pyb
 from pyb import Pin
 from pyb import Timer
 
+
 class Button:
     def __init__(self, lcd, x, y, width, height, text):
         self.lcd = lcd
@@ -24,10 +25,10 @@ class Button:
         self.lcd.set_font(1, scale=1, bold=0, trans=0, scroll=0)
         self.lcd.write(self.text)
 
-    def draw_button(self):
+    def draw(self):
         self.__draw__(self.lcd.rgb(255, 255, 255), self.lcd.rgb(0, 0, 0))
 
-    def touch_draw_button(self):
+    def draw_touched_button(self):
         self.__draw__(self.lcd.rgb(0, 0, 0), self.lcd.rgb(255, 255, 255))
         
     def clear_draw_button(self):
@@ -41,3 +42,6 @@ class Button:
     #redefine by child
     def handler():
         pass
+
+    def set_handler(self, func):
+        self.handler = func

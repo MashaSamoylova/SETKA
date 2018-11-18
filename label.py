@@ -1,6 +1,7 @@
 import lcd160cr
 import pyb
 
+
 class Label:
     def __init__(self, lcd, x, y, text, limit):
         self.lcd = lcd
@@ -24,7 +25,7 @@ class Label:
         self.lcd.set_font(1, scale=2, bold=0, trans=0, scroll=0)
         self.lcd.write(self.text)
 
-    def draw_label(self):
+    def draw(self):
         self.text = self.text[:self.limit]
         self.__draw__(self.lcd.rgb(255, 255, 255), self.lcd.rgb(0, 0, 0))
 
