@@ -5,4 +5,4 @@
 
 `picocom /dev/ttyACM0` - вы в интерпритаторе pyboard;
 
-`ctr-d` -перезапустить pyboard
+`python pyboard.py <your script>` - запустить собственный скрирпт на pyboard (ист: https://github.com/micropython/micropython/blob/master/tools/pyboard.py) 
