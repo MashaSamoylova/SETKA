@@ -6,6 +6,7 @@ from pyb import Pin
 from pyb import Timer
 
 from screen import Screen
+from tab import Tab
 
 
 #set more detailed information on the exception
@@ -18,7 +19,7 @@ lcd.set_brightness(29)
 lcd.erase()
 
 tab_number = 1
-screen1 = Screen(lcd, 1)
-screen2 = Screen(lcd, 2)
-screen3 = Screen(lcd, 3)
-
+main_screen = Screen(lcd)
+tab1 = Tab(lcd)
+tab2 = Tab(lcd)
+tab3 = Tab(lcd)

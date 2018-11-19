@@ -25,11 +25,11 @@ class Button:
         self.lcd.set_font(1, scale=1, bold=0, trans=0, scroll=0)
         self.lcd.write(self.text)
 
-    def draw(self):
-        self.__draw(self.lcd.rgb(255, 255, 255), self.lcd.rgb(0, 0, 0))
+    def draw(self, fg=(255, 255, 255), bg=(0, 0, 0)):
+        self.__draw(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
 
-    def draw_touched_button(self):
-        self.__draw(self.lcd.rgb(0, 0, 0), self.lcd.rgb(255, 255, 255))
+    def draw_touched_button(self, fg=(0,0,0), bg=(255,255,255)):
+        self.__draw(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
         
     def clear_draw_button(self):
         self.__draw(self.lcd.rgb(0, 0, 0), self.lcd.rgb(0, 0, 0))
