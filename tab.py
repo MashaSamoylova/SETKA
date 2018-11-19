@@ -1,7 +1,9 @@
 from label import EditableLable
 from button import Button
+from utils import colors
 
-class Tab():
+
+class Tab:
     def __init__(self, lcd):
         self.lcd = lcd
         self.status_error = False
@@ -23,10 +25,10 @@ class Tab():
                     self.error_button.handler()
 
     def draw_error(self):
-        self.error_button.draw((0,0,0), (232,16,16))
+        self.error_button.draw(colors["black"], colors["red"])
 
     def notify_error(self):
-        self.error_button.draw((232,16,16), (255,255,255))
+        self.error_button.draw(colors["red"], colors["white"])
         self.error_button.clear_draw_button()
         self.status_error = False
 

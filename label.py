@@ -1,11 +1,13 @@
 import lcd160cr
 import pyb
 
+from utils import colors
+
 
 class Label:
     """Text label. Display text on the screen"""
 
-    #font scaler
+    # font scaler
     font_size = 2
     
     def __init__(self, lcd, x, y, text, limit):
@@ -15,7 +17,7 @@ class Label:
         self.x = x
         self.y = y
         self.text = text
-        #limit for text slicing
+        # limit for text slicing
         self.limit = limit
 
     def __draw(self, fg, bg):
@@ -35,20 +37,19 @@ class Label:
         self.lcd.set_font(1, scale=self.font_size, bold=0, trans=0, scroll=0)
         self.lcd.write(self.text[number])
 
-    def draw(self):
+    def draw(self, fg=colors["white"], bg=colors["black"]):
         """Slice text and call __draw
            with black and white bg, fg"""
 
         self.text = self.text[:self.limit]
-        self.__draw(self.lcd.rgb(255, 255, 255), self.lcd.rgb(0, 0, 0))
+        self.__draw(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
 
-    def clear_draw_label(self):
+    def clear_draw_label(self, fg=colors["black"], bg=colors["black"]):
         """Fill text space with black pixels"""
 
-        self.__draw(self.lcd.rgb(0, 0, 0), self.lcd.rgb(0, 0, 0))
+        self.__draw(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
 
         
-
 class EditableLable(Label):
     """Label that provides some methods for visual representation of edditing,
        such as flashing"""

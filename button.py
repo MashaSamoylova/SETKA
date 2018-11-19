@@ -4,6 +4,8 @@ import pyb
 from pyb import Pin
 from pyb import Timer
 
+from utils import colors
+
 
 class Button:
     def __init__(self, lcd, x, y, width, height, text):
@@ -25,20 +27,20 @@ class Button:
         self.lcd.set_font(1, scale=1, bold=0, trans=0, scroll=0)
         self.lcd.write(self.text)
 
-    def draw(self, fg=(255, 255, 255), bg=(0, 0, 0)):
+    def draw(self, fg=colors["white"], bg=colors["black"]):
         self.__draw(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
 
-    def draw_touched_button(self, fg=(0,0,0), bg=(255,255,255)):
+    def draw_touched_button(self, fg=colors["black"], bg=colors["white"]):
         self.__draw(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
         
-    def clear_draw_button(self):
-        self.__draw(self.lcd.rgb(0, 0, 0), self.lcd.rgb(0, 0, 0))
+    def clear_draw_button(self, fg=colors["black"], bg=colors["black"]):
+        self.__draw(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
 
     def is_touched(self, x, y):
         return x > self.x and x < self.x + self.width and y > self.y and y < self.y + self.height
 
-    #redefine by child
-    def handler():
+    # redefine by child
+    def handler(self):
         pass
 
     def set_handler(self, func):

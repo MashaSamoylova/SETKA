@@ -1,4 +1,3 @@
-import pyb
 import lcd160cr
 import micropython
 

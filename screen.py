@@ -1,14 +1,17 @@
 from button import Button
-from label import EditableLable
+
 
 def handler_tab1_button():
     return 1
 
+
 def handler_tab2_button():
     return 2
 
+
 def handler_tab3_button():
     return 3
+
 
 class Screen:
     """ romw will write this"""
