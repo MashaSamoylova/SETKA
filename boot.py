@@ -6,6 +6,7 @@ from pyb import Timer
 
 from screen import Screen
 from tab import Tab
+from tab1 import Tab1
 
 
 #set more detailed information on the exception
@@ -19,6 +20,6 @@ lcd.erase()
 
 tab_number = 1
 main_screen = Screen(lcd)
-tab1 = Tab(lcd)
+tab1 = Tab1(lcd)
 tab2 = Tab(lcd)
 tab3 = Tab(lcd)

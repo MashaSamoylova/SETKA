@@ -15,7 +15,7 @@ def handler_tab3_button():
 
 class Screen:
     """ romw will write this"""
-    current_tab_number = 1
+    current_tab_number = 0
 
     def __init__(self, lcd):
         self.lcd = lcd
@@ -29,7 +29,7 @@ class Screen:
     def draw(self):
         """Draw tab buttons"""
 
-        for i, tab in enumerate([self.tab1_button, self.tab2_button, self.tab3_button], 1):
+        for i, tab in enumerate([self.tab1_button, self.tab2_button, self.tab3_button]):
             if i == self.current_tab_number:
                 tab.draw_touched_button()
             else:
