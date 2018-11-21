@@ -1,48 +1,60 @@
 from button import Button
-
-
-def handler_tab1_button():
-    return 1
-
-
-def handler_tab2_button():
-    return 2
-
-
-def handler_tab3_button():
-    return 3
-
+from tab1 import Tab1
+from tab2 import Tab2
+from tab3 import Tab3
+from utils import colors
 
 class Screen:
-    """ romw will write this"""
+    """Main screen"""
+
     current_tab_number = 0
+    status_error = False
+    error_msg = ""
 
     def __init__(self, lcd):
         self.lcd = lcd
-        self.tab1_button = Button(lcd, 0, 0, 42, 40, "1")
-        self.tab1_button.set_handler(handler_tab1_button)
-        self.tab2_button = Button(lcd, 42, 0, 42, 40, "2")
-        self.tab2_button.set_handler(handler_tab2_button)
-        self.tab3_button = Button(lcd, 84, 0, 42, 40, "3")
-        self.tab3_button.set_handler(handler_tab3_button)
+        self.tab_buttons = [Button(lcd, 42 * i, 0, 42, 30, str(i + 1)) for i in range(3)]
+        self.tab_buttons[0].handler = lambda: 1
+        self.tab_buttons[1].handler = lambda: 2
+        self.tab_buttons[2].handler = lambda: 3
+        self.tabs = [Tab1(lcd), Tab2(lcd), Tab3(lcd)]
+        self.error_button = Button(lcd, 0, 125, 128, 30, "")
+        self.error_button.handler = self.notify_error
 
     def draw(self):
-        """Draw tab buttons"""
+        """Draw tab buttons, errors and current tab"""
 
-        for i, tab in enumerate([self.tab1_button, self.tab2_button, self.tab3_button]):
+        for i, tab_button in enumerate(self.tab_buttons):
             if i == self.current_tab_number:
-                tab.draw_touched_button()
+                tab_button.draw_touched()
             else:
-                tab.draw()
+                tab_button.draw_normal()
+        self.tabs[self.current_tab_number].draw()
+        if self.status_error:
+            self.draw_error()        
 
-    def handler(self):
-        touch, x, y = self.lcd.get_touch()
-        if touch:
-            if self.tab1_button.is_touched(x,y):
-                return self.tab1_button.handler()
-            elif self.tab2_button.is_touched(x,y):
-                return self.tab2_button.handler()
-            elif self.tab3_button.is_touched(x,y):
-                return self.tab3_button.handler()
-        return self.current_tab_number
-        
+    def handle_touch(self, x, y):
+        """Delegates touch handling to error_button,
+           then to buttons and then to current tab"""
+
+        if self.status_error:
+            result = self.error_button.handle_touch(x,y)
+            if result: return 1
+        for button in self.tab_buttons:
+            result = button.handle_touch(x, y)
+            if result: break
+        if result:
+            if self.current_tab_number != result - 1:
+                self.tabs[self.current_tab_number].clear()
+                self.current_tab_number = result - 1
+                return result
+        else:
+            return self.tabs[self.current_tab_number].handle_touch(x, y)
+
+    def draw_error(self):
+        self.error_button.draw(colors["black"], colors["red"])
+
+    def notify_error(self):
+        self.error_button.draw(colors["red"], colors["white"])
+        self.error_button.clear()
+        self.status_error = False

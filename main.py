@@ -2,8 +2,11 @@ import time
 
 if __name__=="__main__":
     main_screen.draw()
-    current_tab = tab1
-    tab1.draw()
+    while True:
+        touch, x, y = lcd.get_touch()
+        if touch: 
+            result = main_screen.handle_touch(x, y)
+            if result: main_screen.draw()
  #   while True:
   #      new_tab_number = main_screen.handler()
    #     if new_tab_number != main_screen.current_tab_number:
