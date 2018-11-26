@@ -3,14 +3,13 @@ import pyb
 
 from utils import colors
 
-
 class Label:
     """Text label. Display text on the screen"""
 
     # font scaler
     font_size = 2
     
-    def __init__(self, lcd, x, y, text, limit):
+    def __init__(self, lcd, x, y, text, limit=5, bg=colors['black'], fg=colors['white']):
         """Create Label object, set class variables"""
 
         self.lcd = lcd
@@ -19,35 +18,34 @@ class Label:
         self.text = text
         # limit for text slicing
         self.limit = limit
+        self.fg = fg
+        self.bg = bg
 
-    def __draw(self, fg, bg):
+    def draw(self, fg=None, bg=None):
         """Display self.text at (x, y) pixel of the screen
            with fg and bg (foreground, backgroung) as colors"""
 
-        self.lcd.set_text_color(fg, bg)
+        if not fg: fg = self.fg
+        if not bg: bg = self.bg
+        self.lcd.set_text_color(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
         self.lcd.set_pos(self.x, self.y)
         self.lcd.set_font(1, scale=self.font_size, bold=0, trans=0, scroll=0)
-        self.lcd.write(self.text)
+        self.lcd.write(self.text[:self.limit])
 
-    def draw_char(self, fg, bg, number):
+    def draw_char(self, number, fg=None, bg=None):
         """Draw single character of text in fg, bg colors"""
 
-        self.lcd.set_text_color(fg, bg)
+        if not fg: fg = self.fg
+        if not bg: bg = self.bg
+        self.lcd.set_text_color(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
         self.lcd.set_pos(self.x + number * ((1 + self.font_size) * 6), self.y)
         self.lcd.set_font(1, scale=self.font_size, bold=0, trans=0, scroll=0)
         self.lcd.write(self.text[number])
 
-    def draw(self, fg=colors["white"], bg=colors["black"]):
-        """Slice text and call __draw
-           with black and white bg, fg"""
-
-        self.text = self.text[:self.limit]
-        self.__draw(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
-
-    def clear_draw_label(self, fg=colors["black"], bg=colors["black"]):
+    def clear(self):
         """Fill text space with black pixels"""
 
-        self.__draw(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
+        self.draw(colors['black'], colors['black'])
 
         
 class EditableLable(Label):
