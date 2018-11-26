@@ -18,3 +18,6 @@ http://docs.micropython.org/en/v1.9.3/pyboard/library/pyb.UART.html
 
 Asyncio
 https://github.com/peterhinch/micropython-async/blob/master/TUTORIAL.md#7-notes-for-beginners
+
+Как отправить ченить с линукса
+https://unix.stackexchange.com/questions/117037/how-to-send-data-to-a-serial-port-and-see-any-answer
