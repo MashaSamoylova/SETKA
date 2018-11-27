@@ -1,5 +1,5 @@
-from views import Button, Label
-from utils import colors
+from ui.views import Button, Label
+from ui.utils import colors
 
 class Tab2:
     """Second tab, consists of 4 Labels of temperature and pressuare"""

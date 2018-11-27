@@ -5,7 +5,7 @@ import pyb
 
 from pyb import Pin
 from pyb import Timer
-from utils import colors
+from ui.utils import colors
 
 
 class Label:

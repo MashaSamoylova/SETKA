@@ -5,7 +5,7 @@ import machine
 from pyb import Pin
 from pyb import Timer
 
-from screen import Screen
+from ui.screen import Screen
 
 
 #set more detailed information on the exception

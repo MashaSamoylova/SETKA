@@ -1,5 +1,5 @@
-from views import Button, EditableButton, Label
-from utils import colors
+from ui.views import Button, EditableButton, Label
+from ui.utils import colors
 
 
 class Tab3:

@@ -1,8 +1,8 @@
-from views import Button
-from tab1 import Tab1
-from tab2 import Tab2
-from tab3 import Tab3
-from utils import colors
+from ui.views import Button
+from ui.tab1 import Tab1
+from ui.tab2 import Tab2
+from ui.tab3 import Tab3
+from ui.utils import colors
 
 class Screen:
     """Main screen"""
