@@ -1,6 +1,8 @@
 from ui.views import Button, EditableButton
 from ui.utils import colors
 
+import uasyncio as asyncio
+
 
 class Tab1:
     """First tab, consists of 4 EditableButtons and a "Change" button"""
@@ -13,6 +15,8 @@ class Tab1:
         self.second_head_button = EditableButton(lcd, 45, 76, 128, 17, "000.0")
         self.acceptance_button = EditableButton(lcd, 45, 94, 128, 17, "000.0")
 
+        self.extrudo_button.handler = self.edit_handler
+
         self.change_button = Button(lcd, 0, 125, 128, 30, "Change")
 
         self.ok_button = Button(lcd, 0, 125, 64, 30, "Ok")
@@ -21,6 +25,9 @@ class Tab1:
         self.change_button.handler = self.change_handler
         self.ok_button.handler = self.ok_handler
         self.cancel_button.handler = self.cancel_handler
+        
+        self.blink_flag = False
+        self.loop = asyncio.get_event_loop()
 
     def draw(self):
         self.extrudo_button.draw_normal()
@@ -46,6 +53,16 @@ class Tab1:
     def cancel_handler(self):
         self.edit_mode = False
         return 1
+
+    def edit_handler(self):
+        self.loop.create_task(self.blink())
+        return 0
+    
+    async def blink(self):
+        while True:
+            self.blink_flag = not self.blink_flag
+            await asyncio.sleep_ms(200)
+
 
     def handle_touch(self, x, y):
         if self.edit_mode:
