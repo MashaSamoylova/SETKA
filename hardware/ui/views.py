@@ -53,28 +53,6 @@ class Label:
         self.draw(colors['black'], colors['black'])
 
         
-class EditableLable(Label):
-    """Label that provides some methods for visual representation of edditing,
-       such as flashing"""
-
-    symbol_switcher = False
-    flashing_symbol_number = 0
-
-    def symbol_switcher(self):
-        """Switch char condition based on symbol_switcher flag"""
-
-        fg = self.lcd.rgb(0,0,0)
-        bg = self.lcd.rgb(255, 255, 255)
-        if self.symbol_switcher: fg, bg = bg, fg
-        self.draw_char(fg, bg, self.flashing_symbol_number)
-        self.symbol_switch = not self.symbol_switch
-
-    def stop_symbol_flash(self):
-        """Restore initial state of char"""
-
-        self.draw_char(self.lcd.rgb(255,255,255), self.lcd.rgb(0, 0, 0), self.flashing_symbol_number)
-
-
 class Button:
 
     handler = lambda: 0
