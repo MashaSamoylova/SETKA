@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'settings.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,9 +26,10 @@ class Ui_Dialog(object):
         self.label.setSizePolicy(sizePolicy)
         self.label.setObjectName("label")
         self.horizontalLayout.addWidget(self.label)
-        self.dateTimeEdit = QtWidgets.QDateTimeEdit(Dialog)
-        self.dateTimeEdit.setObjectName("dateTimeEdit")
-        self.horizontalLayout.addWidget(self.dateTimeEdit)
+        self.date_time_edit = QtWidgets.QDateTimeEdit(Dialog)
+        self.date_time_edit.setCalendarPopup(True)
+        self.date_time_edit.setObjectName("date_time_edit")
+        self.horizontalLayout.addWidget(self.date_time_edit)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.horizontalLayout.addLayout(self.horizontalLayout_2)
@@ -49,8 +50,9 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        Dialog.setWindowTitle(_translate("Dialog", "Настройки"))
         self.label.setText(_translate("Dialog", "Установить время и дату"))
+        self.date_time_edit.setDisplayFormat(_translate("Dialog", "dd.MM.yy hh:mm:ss"))
 
 
 if __name__ == "__main__":
