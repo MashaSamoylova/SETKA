@@ -25,3 +25,6 @@
  
  Redmine
  http://esau.tusur.ru/issues/1993
+ 
+ Обновление питона
+ https://github.com/micropython/micropython/wiki/Pyboard-Firmware-Update#dfu-util
