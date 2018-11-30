@@ -18,6 +18,15 @@ class Tab1:
         self.engines_buttons = [self.extrudo_button, self.first_head_button, 
                            self.second_head_button, self.acceptance_button]
 
+        self.analog_buttons = [
+                self.makhina_control.plus_button, 
+                self.makhina_control.minus_button,
+                self.makhina_control.right_button]
+
+        self.makhina_control.plus_button.handler = self.plus_handler
+        self.makhina_control.minus_button.handler = self.minus_handler
+        self.makhina_control.right_button.handler = self.right_handler
+
         self.change_button = Button(lcd, 0, 125, 128, 30, "Change")
 
         self.ok_button = Button(lcd, 0, 125, 64, 30, "Ok")
@@ -71,6 +80,32 @@ class Tab1:
             self.engines_buttons[self.cur_button - 1].draw_normal()
         self.cur_button = 0
 
+    def plus_handler(self):
+        index = self.engines_buttons[self.cur_button - 1].char_editing
+        string = self.engines_buttons[self.cur_button - 1].text
+        digit = (int(string[index]) + 1)%10
+        self.engines_buttons[self.cur_button - 1].text = string[:index] + str(digit) + string[index + 1:]
+        self.engines_buttons[self.cur_button - 1].draw_normal()
+    
+    def minus_handler(self):
+        index = self.engines_buttons[self.cur_button - 1].char_editing
+        string = self.engines_buttons[self.cur_button - 1].text
+        digit = (int(string[index]) - 1)%10
+        self.engines_buttons[self.cur_button - 1].text = string[:index] + str(digit) + string[index + 1:]
+        self.engines_buttons[self.cur_button - 1].draw_normal()
+
+    def right_handler(self):
+        self.engines_buttons[self.cur_button - 1].draw_normal()
+        char_editing = self.engines_buttons[self.cur_button - 1].char_editing
+
+        char_editing += 1
+        char_editing %= len(self.engines_buttons[self.cur_button - 1].text)
+        if self.engines_buttons[self.cur_button - 1].text[char_editing] == ".":
+            char_editing += 1
+
+        char_editing %= len(self.engines_buttons[self.cur_button - 1].text)
+        self.engines_buttons[self.cur_button - 1].char_editing = char_editing
+
     def handle_touch(self, x, y):
         if self.edit_mode:
             for i, button in enumerate(self.engines_buttons, 1):
@@ -80,6 +115,10 @@ class Tab1:
                     return result
             for button in [self.ok_button, self.cancel_button]:
                 result = button.handle_touch(x, y)
+                if result: return result
+
+            for analog_button in self.analog_buttons:
+                result = analog_button.handle_touch()
                 if result: return result
         else:
             return self.change_button.handle_touch(x, y)
