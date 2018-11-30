@@ -7,6 +7,8 @@ from pyb import Pin
 from pyb import Timer
 from ui.utils import colors
 
+import uasyncio as asyncio
+
 
 class Label:
     """Text label. Display text on the screen"""
@@ -93,14 +95,19 @@ class Button:
 
 
 class EditableButton(Button):
-    """"""    
-    font_size = 2
+    """Label that can be edited (with blinking)"""    
 
+    font_size = 2
+    edit_mode = False
+    char_editing = 0
+    toggled = False
 
     def __init__(self, lcd, x, y, width, height, text):
         super().__init__(lcd, x, y, width, height, text)
         self.text_position_x = self.x
         self.text_position_y = self.y
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.run())
 
     def draw(self, fg, bg):
         self.lcd.set_text_color(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
@@ -109,13 +116,30 @@ class EditableButton(Button):
         self.lcd.set_font(1, scale=self.font_size, bold=0, trans=0, scroll=0)
         self.lcd.write(self.text)
     
-    def draw_normal(self, fg=colors["white"], bg=colors["black"]):
-        self.draw(fg, bg)
+    def draw_normal(self):
+        self.draw(colors["white"], colors["black"])
+
+    async def run(self):
+        while True:
+            if self.edit_mode:
+                self.toggle()
+            await asyncio.sleep_ms(500)
+
+    def toggle(self):
+        self.toggled = not self.toggled
+        bg, fg = colors['black'], colors['white']
+        if self.toggled: bg, fg = fg, bg
+        self.draw_char(fg, bg, self.char_editing)
 
     def draw_char(self, fg, bg, number):
         """Draw single character of text in fg, bg colors"""
 
-        self.lcd.set_text_color(fg, bg)
+        self.lcd.set_text_color(self.lcd.rgb(*fg), self.lcd.rgb(*bg))
         self.lcd.set_pos(self.text_position_x + number * ((1 + self.font_size) * 6), self.text_position_y)
         self.lcd.set_font(1, scale=self.font_size, bold=0, trans=0, scroll=0)
         self.lcd.write(self.text[number])
+
+    def handle_touch(self, x, y):
+        if x > self.x and x < self.x + self.width and y > self.y and y < self.y + self.height:
+            self.edit_mode = not self.edit_mode
+            return 1

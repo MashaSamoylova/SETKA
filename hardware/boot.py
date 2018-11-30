@@ -1,6 +1,7 @@
 import lcd160cr
 import micropython
 import machine
+import os
 
 from pyb import Pin
 from pyb import Timer
