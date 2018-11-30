@@ -1,8 +1,7 @@
 all:
-	mkdir _build
-	mkdir _build/ui
+	mkdir -p _build/ui
 	touch _build/ui/__init__.py
-	mkdir _build/uasyncio
+	mkdir -p _build/uasyncio
 	cp -r ./uasyncio ./_build/
 	pyminifier -o ./_build/boot.py boot.py 
 	pyminifier -o ./_build/main.py main.py
@@ -13,7 +12,7 @@ all:
 	pyminifier -o ./_build/ui/utils.py ./ui/utils.py
 	pyminifier -o ./_build/ui/views.py ./ui/views.py
 #	pyminifier -o ./_build/uasyncio/core.py ./uasyncio/core.py
-	cp -r ./_build/* /media/maria/ARIGATO
+	cp -r ./_build/* /media/roman/ARIGATO
 	
 clean:
 	rm -r _build
