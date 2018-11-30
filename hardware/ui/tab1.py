@@ -46,6 +46,7 @@ class Tab1:
         print('OK')
         self.edit_mode = False
         self.off_flash_edit()
+        makhina_control.set_speeds((float(x.text) for x in self.engines_buttons))
         return 1
 
     def cancel_handler(self):

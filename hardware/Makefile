@@ -32,6 +32,7 @@ without_compress:
 	cp ./uasyncio/__init__.py ./_build/uasyncio/__init__.py
 	cp ./makhina/makhina.py ./_build/makhina/makhina.py
 	cp ./makhina/motor.py ./_build/makhina/motor.py
+	cp ./makhina/control.py ./_build/makhina/control.py
 	cp -r ./_build/* /media/${USER}/ARIGATO
 
 clean:

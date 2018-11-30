@@ -16,6 +16,5 @@ async def handle_lcd_touch():
 
 if __name__=="__main__":
     main_screen.draw()
-    loop = asyncio.get_event_loop()
     loop.create_task(handle_lcd_touch())
     loop.run_forever()

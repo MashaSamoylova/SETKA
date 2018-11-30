@@ -15,4 +15,11 @@ class Makhina:
         #self.enablePulseReceiver = Pin('Y7', Pin.OUT)
         #self.enablePulse.low()
         #self.enablePulseReceiver.low()
+    
+    def start(self):
+        for engine in [self.extrudo_engine, self.first_head_engine, self.second_head_engine, self.reciever_engine]:
+            engine.accel()
 
+    def stop(self):
+        for engine in [self.extrudo_engine, self.first_head_engine, self.second_head_engine, self.reciever_engine]:
+            engine.stop()
