@@ -11,13 +11,13 @@ class Screen:
     status_error = False
     error_msg = ""
 
-    def __init__(self, lcd):
+    def __init__(self, lcd, makhina_control):
         self.lcd = lcd
         self.tab_buttons = [Button(lcd, 42 * i, 0, 42, 20, str(i + 1)) for i in range(3)]
         self.tab_buttons[0].handler = lambda: 1
         self.tab_buttons[1].handler = lambda: 2
         self.tab_buttons[2].handler = lambda: 3
-        self.tabs = [Tab1(lcd), Tab2(lcd), Tab3(lcd)]
+        self.tabs = [Tab1(lcd, makhina_control), Tab2(lcd), Tab3(lcd)]
         self.error_button = Button(lcd, 0, 135, 128, 15, "")
         self.error_button.handler = self.notify_error
 

@@ -15,6 +15,7 @@ class Motor:
         self.impulse_width = 9000
 
     def set_round_per_min(self, rpm):
+        print(rpm)
         self.__gz_new = int(rpm * (self.const / 60))
 
         while rpm > (self.__gz_new / (self.const / 60)):
