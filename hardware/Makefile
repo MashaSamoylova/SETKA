@@ -2,7 +2,7 @@ all:
 	mkdir -p _build/ui
 	touch _build/ui/__init__.py
 	mkdir -p _build/uasyncio
-	cp -r ./uasyncio ./_build/
+	touch _build/uasyncio/__init__.py
 	pyminifier -o ./_build/boot.py boot.py 
 	pyminifier -o ./_build/main.py main.py
 	pyminifier -o ./_build/ui/screen.py ./ui/screen.py  
@@ -11,8 +11,28 @@ all:
 	pyminifier -o ./_build/ui/tab3.py ./ui/tab3.py
 	pyminifier -o ./_build/ui/utils.py ./ui/utils.py
 	pyminifier -o ./_build/ui/views.py ./ui/views.py
-#	pyminifier -o ./_build/uasyncio/core.py ./uasyncio/core.py
-	cp -r ./_build/* /media/roman/ARIGATO
+	pyminifier -o ./_build/uasyncio/core.py ./uasyncio/core.py
+	cp -r ./_build/* /media/${USER}/ARIGATO
 	
+without_compress:
+	mkdir -p _build/ui
+	touch _build/ui/__init__.py
+	mkdir -p _build/uasyncio
+	mkdir -p _build/makhina
+	touch _build/makhina/__init__.py
+	cp boot.py ./_build/boot.py 
+	cp main.py ./_build/main.py
+	cp ./ui/screen.py ./_build/ui/screen.py  
+	cp ./ui/tab1.py ./_build/ui/tab1.py
+	cp ./ui/tab2.py ./_build/ui/tab2.py
+	cp ./ui/tab3.py ./_build/ui/tab3.py
+	cp ./ui/utils.py ./_build/ui/utils.py
+	cp ./ui/views.py ./_build/ui/views.py
+	cp ./uasyncio/core.py ./_build/uasyncio/core.py
+	cp ./uasyncio/__init__.py ./_build/uasyncio/__init__.py
+	cp ./makhina/makhina.py ./_build/makhina/makhina.py
+	cp ./makhina/motor.py ./_build/makhina/motor.py
+	cp -r ./_build/* /media/${USER}/ARIGATO
+
 clean:
 	rm -r _build
