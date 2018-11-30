@@ -3,6 +3,7 @@ all:
 	touch _build/ui/__init__.py
 	mkdir -p _build/uasyncio
 	touch _build/uasyncio/__init__.py
+	mkdir -p _build/makhina
 	pyminifier -o ./_build/boot.py boot.py 
 	pyminifier -o ./_build/main.py main.py
 	pyminifier -o ./_build/ui/screen.py ./ui/screen.py  
@@ -12,6 +13,10 @@ all:
 	pyminifier -o ./_build/ui/utils.py ./ui/utils.py
 	pyminifier -o ./_build/ui/views.py ./ui/views.py
 	pyminifier -o ./_build/uasyncio/core.py ./uasyncio/core.py
+	pyminifier -o ./_build/makhina/makhina.py ./makhina/makhina.py
+	pyminifier -o ./_build/makhina/motor.py ./makhina/motor.py
+	pyminifier -o ./_build/makhina/control.py ./makhina/control.py
+	
 	cp -r ./_build/* /media/${USER}/ARIGATO
 	
 without_compress:

@@ -8,7 +8,9 @@ class Tab1:
     edit_mode = False
     cur_button = 0
     
-    def __init__(self, lcd):
+    def __init__(self, lcd, makhina_control):
+        self.makhina_control = makhina_control
+
         self.extrudo_button = EditableButton(lcd, 45, 30, 128, 20, "000.0")
         self.first_head_button = EditableButton(lcd, 45, 55, 128, 20, "000.0")
         self.second_head_button = EditableButton(lcd, 45, 80, 128, 20, "000.0")
@@ -46,7 +48,7 @@ class Tab1:
         print('OK')
         self.edit_mode = False
         self.off_flash_edit()
-        makhina_control.set_speeds((float(x.text) for x in self.engines_buttons))
+        self.makhina_control.set_speeds((float(x.text) for x in self.engines_buttons))
         return 1
 
     def cancel_handler(self):

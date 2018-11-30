@@ -23,4 +23,4 @@ lcd.erase()
 
 # gui
 makhina_control = MakhinaControl()
-main_screen = Screen(lcd)
+main_screen = Screen(lcd, makhina_control)
