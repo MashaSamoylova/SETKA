@@ -51,6 +51,9 @@ class Tab1:
     def change_handler(self):
         self.edit_mode = True
         self.flash_edit(1)
+        self.makhina_control.plus_button.handler = self.plus_handler
+        self.makhina_control.minus_button.handler = self.minus_handler
+        self.makhina_control.right_button.handler = self.right_handler
         return 1
 
     def ok_handler(self):
@@ -58,6 +61,9 @@ class Tab1:
         self.edit_mode = False
         self.off_flash_edit()
         self.makhina_control.set_speeds((float(x.text) for x in self.engines_buttons))
+        self.makhina_control.plus_button.handler = self.plus_handler = lambda: 1
+        self.makhina_control.minus_button.handler = self.minus_handler = lambda: 1
+        self.makhina_control.right_button.handler = self.right_handler = lambda: 1
         return 1
 
     def cancel_handler(self):
