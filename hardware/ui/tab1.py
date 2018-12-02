@@ -7,14 +7,15 @@ class Tab1:
 
     edit_mode = False
     cur_button = 0
+    is_draw = True
     
     def __init__(self, lcd, makhina_control):
         self.makhina_control = makhina_control
 
         self.extrudo_button = EditableButton(lcd, 45, 30, 128, 20, "000.0")
-        self.first_head_button = EditableButton(lcd, 45, 55, 128, 20, "000.0")
-        self.second_head_button = EditableButton(lcd, 45, 80, 128, 20, "000.0")
-        self.acceptance_button = EditableButton(lcd, 45, 105, 128, 20, "000.0")
+        self.first_head_button = EditableButton(lcd, 45, 55, 128, 20, "0.0")
+        self.second_head_button = EditableButton(lcd, 45, 80, 128, 20, "0.0")
+        self.acceptance_button = EditableButton(lcd, 45, 105, 128, 20, "0.0")
         self.engines_buttons = [self.extrudo_button, self.first_head_button, 
                            self.second_head_button, self.acceptance_button]
 
@@ -22,10 +23,6 @@ class Tab1:
                 self.makhina_control.plus_button, 
                 self.makhina_control.minus_button,
                 self.makhina_control.right_button]
-
-        self.makhina_control.plus_button.handler = self.plus_handler
-        self.makhina_control.minus_button.handler = self.minus_handler
-        self.makhina_control.right_button.handler = self.right_handler
 
         self.change_button = Button(lcd, 0, 125, 128, 30, "Change")
 

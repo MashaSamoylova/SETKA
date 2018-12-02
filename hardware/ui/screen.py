@@ -46,7 +46,9 @@ class Screen:
         if result:
             if self.current_tab_number != result - 1:
                 self.tabs[self.current_tab_number].clear()
+                self.tabs[self.current_tab_number].is_draw = False
                 self.current_tab_number = result - 1
+                self.tabs[self.current_tab_number].is_draw = True
                 return result
         else:
             return self.tabs[self.current_tab_number].handle_touch(x, y)

@@ -2,6 +2,7 @@ from ui.views import Button, Label
 from ui.utils import colors
 
 class Tab2:
+    is_draw = False
     """Second tab, consists of 4 Labels of temperature and pressuare"""
 
     def __init__(self, lcd):
