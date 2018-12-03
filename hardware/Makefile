@@ -4,6 +4,7 @@ all:
 	mkdir -p _build/uasyncio
 	touch _build/uasyncio/__init__.py
 	mkdir -p _build/makhina
+	mkdir -p _build/recipes
 	pyminifier -o ./_build/boot.py boot.py 
 	pyminifier -o ./_build/main.py main.py
 	pyminifier -o ./_build/ui/screen.py ./ui/screen.py  
@@ -24,6 +25,7 @@ without_compress:
 	touch _build/ui/__init__.py
 	mkdir -p _build/uasyncio
 	mkdir -p _build/makhina
+	mkdir -p _build/recipes
 	touch _build/makhina/__init__.py
 	cp boot.py ./_build/boot.py 
 	cp main.py ./_build/main.py

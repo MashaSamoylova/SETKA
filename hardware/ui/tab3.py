@@ -14,11 +14,14 @@ class Tab3:
 
     edit_mode = False
     is_draw = False
+    cur_button = 0
     
     def __init__(self, lcd, makhina_control):
-        self.config_string = EditableButton(lcd, 75, 50, 128, 17, "001")
+        self.config_string = EditableButton(lcd, 75, 50, 128, 17, makhina_control.config)
         self.time_string = EditableButton(lcd, 30, 80, 128, 17, "")
         self.date_string = EditableButton(lcd, 5, 100, 128, 17, "")
+
+        self.settings_buttons = [self.config_string, self.time_string, self.date_string]
         self.time_string.font_size = 1
         self.date_string.font_size = 1
 
@@ -28,7 +31,7 @@ class Tab3:
         self.cancel_button = Button(lcd, 64, 125, 64, 30, "Cnl")
 
         self.change_button.handler = self.change_handler
-        self.ok_button.handler = self.ok_handler
+        self.ok_button.handler = self.ok_handler1
         self.cancel_button.handler = self.cancel_handler
 
         self.rtc = RTC()
@@ -55,13 +58,47 @@ class Tab3:
         self.makhina_control.right_button.handler = self.right_handler
         return 1
 
+    def ok_handler1(self):
+        self.edit_mode = False
+        self.off_flash_edit()
+        self.makhina_control.plus_button.handler = self.plus_handler = lambda: 1
+        self.makhina_control.minus_button.handler = self.minus_handler = lambda: 1
+        self.makhina_control.right_button.handler = self.right_handler = lambda: 1
+
+        print("CHANGED CONFIG", self.config_string.text)
+        self.makhina_control.config = self.config_string.text
+        self.makhina_control.change_current_config()
+        self.off_flash_edit()
+        return 1
+
+    def flash_edit(self, n):
+        print("cut =", self.cur_button, "n =", n)
+        if self.cur_button:
+            self.settings_buttons[self.cur_button - 1].edit_mode = False
+            self.settings_buttons[self.cur_button - 1].draw_normal()
+        if n == self.cur_button:
+            self.cur_button = 0
+        else:
+            self.cur_button = n
+
+    def off_flash_edit(self):
+        if self.cur_button:
+            self.settings_buttons[self.cur_button - 1].edit_mode = False
+            self.settings_buttons[self.cur_button - 1].draw_normal()
+        self.cur_button = 0
+
     def ok_handler(self):
         print('OK')
         self.edit_mode = False
+        self.off_flash_edit()
+        self.makhina_control.plus_button.handler = self.plus_handler = lambda: 1
+        self.makhina_control.minus_button.handler = self.minus_handler = lambda: 1
+        self.makhina_control.right_button.handler = self.right_handler = lambda: 1
         return 1
 
     def cancel_handler(self):
         self.edit_mode = False
+        self.off_flash_edit()
         return 1
     
     async def timer(self):
@@ -93,11 +130,40 @@ class Tab3:
                 self.time_string.clear()
                 self.date_string.draw_normal()
 
+    def plus_handler(self):
+        index = self.settings_buttons[self.cur_button - 1].char_editing
+        string = self.settings_buttons[self.cur_button - 1].text
+        digit = (int(string[index]) + 1)%10
+        self.settings_buttons[self.cur_button - 1].text = string[:index] + str(digit) + string[index + 1:]
+        self.settings_buttons[self.cur_button - 1].draw_normal()
+
+    def minus_handler(self):
+        index = self.settings_buttons[self.cur_button - 1].char_editing
+        string = self.settings_buttons[self.cur_button - 1].text
+        digit = (int(string[index]) - 1)%10
+        self.settings_buttons[self.cur_button - 1].text = string[:index] + str(digit) + string[index + 1:]
+        self.settings_buttons[self.cur_button - 1].draw_normal()
+
+    def right_handler(self):
+        print("right handler")
+        self.settings_buttons[self.cur_button - 1].draw_normal()
+        char_editing = self.settings_buttons[self.cur_button - 1].char_editing
+        char_editing += 1
+        char_editing %= len(self.settings_buttons[self.cur_button - 1].text)
+        if self.settings_buttons[self.cur_button - 1].text[char_editing] == ":":
+            char_editing += 1
+
+        char_editing %= len(self.settings_buttons[self.cur_button - 1].text)
+        self.settings_buttons[self.cur_button - 1].char_editing = char_editing
 
     def handle_touch(self, x, y):
         if self.edit_mode:
-            for button in [self.time_string, self.date_string,
-                           self.config_string, self.ok_button, self.cancel_button]:
+            for i, button in enumerate(self.settings_buttons, 1):
+                result = button.handle_touch(x, y)
+                if result:
+                    self.flash_edit(i)
+                    return result
+            for button in[self.config_string, self.ok_button, self.cancel_button]:
                 result = button.handle_touch(x, y)
                 if result: return result
         else:

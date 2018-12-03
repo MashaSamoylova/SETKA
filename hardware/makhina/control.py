@@ -16,7 +16,16 @@ class MakhinaControl:
 
         self.start_button.handler = self.start
         self.stop_button.handler = self.stop
-    
+
+        # скорости в форме строки, чтобы не переводить из частоты обратно
+        self.extrudo_speed = ""
+        self.first_head_speed = ""
+        self.second_head_speed = ""
+        self.reciever_speed = ""
+
+        self.config = "000"
+        self.change_current_config()
+
     def start(self):
         makhina.start()
 
@@ -24,17 +33,33 @@ class MakhinaControl:
         makhina.stop()
 
     def set_speeds(self, speeds):
-        extrudo_speed, first_head_speed, second_head_speed, reciever_speed = speeds
+        self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed = speeds
 
-        self.makhina.extrudo_engine.set_round_per_min(extrudo_speed)
-        self.makhina.first_head_engine.set_round_per_min(first_head_speed)
-        self.makhina.second_head_engine.set_round_per_min(second_head_speed)
-        self.makhina.reciever_engine.set_round_per_min(reciever_speed)
+        self.makhina.extrudo_engine.set_round_per_min(float(self.extrudo_speed))
+        self.makhina.first_head_engine.set_round_per_min(float(self.first_head_speed))
+        self.makhina.second_head_engine.set_round_per_min(float(self.second_head_speed))
+        self.makhina.reciever_engine.set_round_per_min(float(self.reciever_speed))
+
+        with open("./recipes/" + self.config, "w") as f:
+            f.write(";".join([self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed]))
+            print("writing at ./recipes/" + self.config)
+
+    def change_current_config(self):
+        print("current_config", self.config)
+        try:
+            with open("./recipes/" + self.config) as f:
+                speeds = f.read()
+        except:
+            with open("./recipes/" + self.config, "w") as f:
+                speeds = ";".join(["000.0", "0.0", "0.0", "0.0"])
+                f.write(speeds)
+
+        self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed = speeds.split(";")
 
 
 class AnalogButton:
 
-    handler = lambda: 0
+    handler = lambda : 1
 
     def __init__(self, pin):
         self.button = machine.Pin(pin, machine.Pin.IN, machine.Pin.PULL_UP)

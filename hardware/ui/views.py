@@ -118,7 +118,6 @@ class EditableButton(Button):
     
     def draw_normal(self):
         self.draw(colors["white"], colors["black"])
-        print(self.char_editing)
 
     async def run(self):
         while True:
