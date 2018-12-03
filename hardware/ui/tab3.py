@@ -68,6 +68,20 @@ class Tab3:
         print("CHANGED CONFIG", self.config_string.text)
         self.makhina_control.config = self.config_string.text
         self.makhina_control.change_current_config()
+        
+        hour, minute, second = self.time_string.text.split(":")
+        year, month, day = self.date_string.text.split(":")
+
+        self.rtc.datetime((
+            int(year), 
+            int(month), 
+            int(day), 
+            int(0), 
+            int(hour), 
+            int(minute), 
+            int(second), 
+            int(0)))
+
         self.off_flash_edit()
         return 1
 
