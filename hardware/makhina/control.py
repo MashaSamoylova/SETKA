@@ -2,17 +2,19 @@ import machine
 
 import uasyncio as asyncio
 
+from mainconfig import up_button_pin, down_button_pin,\
+                       right_button_pin, start_button_pin, stop_button_pin
 from makhina.makhina import Makhina
 
 class MakhinaControl:
     def __init__(self):
         self.makhina = Makhina()
         
-       # self.plus_button = AnalogButton("Y")
-        self.minus_button = AnalogButton("Y8")
-        self.right_button = AnalogButton("X11")
-        self.start_button = AnalogButton("X12")
-        self.stop_button = AnalogButton("X10")
+        self.plus_button = AnalogButton(up_button_pin)
+        self.minus_button = AnalogButton(down_button_pin)
+        self.right_button = AnalogButton(right_button_pin)
+        self.start_button = AnalogButton(start_button_pin)
+        self.stop_button = AnalogButton(stop_button_pin)
 
         self.start_button.handler = self.start
         self.stop_button.handler = self.stop
@@ -74,4 +76,3 @@ class AnalogButton:
             if not self.button.value():
                 self.handler()
                 await asyncio.sleep_ms(200)
-
