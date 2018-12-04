@@ -64,6 +64,7 @@ class MakhinaControl:
 class AnalogButton:
 
     handler = lambda : 1
+    enabled = True
 
     def __init__(self, pin):
         self.button = machine.Pin(pin, machine.Pin.IN, machine.Pin.PULL_UP)
@@ -73,6 +74,6 @@ class AnalogButton:
     async def handle_touch(self):
         while True:
             await asyncio.sleep_ms(50)
-            if not self.button.value():
+            if self.enabled and not self.button.value():
                 self.handler()
                 await asyncio.sleep_ms(200)

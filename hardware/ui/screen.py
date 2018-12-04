@@ -37,18 +37,13 @@ class Screen:
         """Delegates touch handling to error_button,
            then to buttons and then to current tab"""
 
-        if self.status_error:
-            result = self.error_button.handle_touch(x,y)
-            if result: return 1
+        if self.status_error and self.error_button.handle_touch(x,y): return 1
         for button in self.tab_buttons:
             result = button.handle_touch(x, y)
             if result: break
-        if result:
-            if self.current_tab_number != result - 1:
+        if result and self.current_tab_number != result - 1:
                 self.tabs[self.current_tab_number].clear()
-                self.tabs[self.current_tab_number].is_draw = False
                 self.current_tab_number = result - 1
-                self.tabs[self.current_tab_number].is_draw = True
                 return result
         else:
             return self.tabs[self.current_tab_number].handle_touch(x, y)

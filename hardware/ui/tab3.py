@@ -42,6 +42,7 @@ class Tab3:
         self.makhina_control = makhina_control
 
     def draw(self):
+        is_draw = True
         self.config_string.draw_normal()
         self.time_string.draw_normal()
         self.date_string.draw_normal()
@@ -184,6 +185,7 @@ class Tab3:
             return self.change_button.handle_touch(x, y)
 
     def clear(self):
+        is_draw = False
         self.config_string.clear()
         self.time_string.clear()
         self.date_string.clear()
