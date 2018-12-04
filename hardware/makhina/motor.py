@@ -22,9 +22,13 @@ class Motor:
             self.__gz_new = self.__gz_new + 1
  
     def accel(self):
+        print("accel")
+        print("new:", self.__gz_new)
+        print("current: ", self.__gz_current)
         if self.__gz_current == 0 and self.__gz_new > self.__gz_current:
+            print("ускорение")
             self.timer.init(freq=1)
-            ch = self.timer.channel(self.channel, pyb.Timer.PWM, pin=self.pin, pulse_width=self.pulse_width)
+            ch = self.timer.channel(self.channel, pyb.Timer.PWM, pin=self.pin, pulse_width=self.impulse_width)
         
         if self.__gz_new > self.__gz_current:
             diff = int(math.sqrt(self.__gz_new - self.__gz_current))
@@ -39,5 +43,8 @@ class Motor:
             self.timer.freq(self.__gz_current)
     
     def stop(self):
-        self.__gz_current == 0
+        print("stop")
+        self.__gz_current = 0
+        print("stop:", self.__gz_new)
+        print("stop:", self.__gz_current)
         self.timer.deinit()

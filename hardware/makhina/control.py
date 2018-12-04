@@ -8,11 +8,11 @@ class MakhinaControl:
     def __init__(self):
         self.makhina = Makhina()
         
-        self.plus_button = AnalogButton("Y1")
-        self.minus_button = AnalogButton("Y2")
-        self.right_button = AnalogButton("Y3")
-        self.start_button = AnalogButton("Y4")
-        self.stop_button = AnalogButton("Y5")
+       # self.plus_button = AnalogButton("Y")
+        self.minus_button = AnalogButton("Y8")
+        self.right_button = AnalogButton("X11")
+        self.start_button = AnalogButton("X12")
+        self.stop_button = AnalogButton("X10")
 
         self.start_button.handler = self.start
         self.stop_button.handler = self.stop
@@ -25,12 +25,13 @@ class MakhinaControl:
 
         self.config = "000"
         self.change_current_config()
+        print("INIT SPEEDS")
 
     def start(self):
-        makhina.start()
+        self.makhina.start()
 
     def stop(self):
-        makhina.stop()
+        self.makhina.stop()
 
     def set_speeds(self, speeds):
         self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed = speeds
@@ -55,6 +56,7 @@ class MakhinaControl:
                 f.write(speeds)
 
         self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed = speeds.split(";")
+        self.set_speeds((self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed))
 
 
 class AnalogButton:

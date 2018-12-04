@@ -15,7 +15,7 @@ micropython.alloc_emergency_exception_buf(100)
 
 loop = asyncio.get_event_loop()
 # lcd
-lcd = lcd160cr.LCD160CR('X')
+lcd = lcd160cr.LCD160CR('XY')
 lcd.set_orient(lcd160cr.PORTRAIT)
 lcd.set_pen(lcd.rgb(255, 255, 255), lcd.rgb(0, 0, 0))
 lcd.set_brightness(29)
