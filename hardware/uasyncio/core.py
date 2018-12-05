@@ -27,8 +27,8 @@ class TimeoutError(CancelledError):
 
 class EventLoop:
 
-    def __init__(self, runq_len=16, waitq_len=16):
-        self.runq = ucollections.deque((), runq_len)
+    def __init__(self, runq_len=32, waitq_len=32):
+        self.runq = ucollections.deque((), runq_len, True)
         self.waitq = utimeq.utimeq(waitq_len)
         # Current task being run. Task is a top-level coroutine scheduled
         # in the event loop (sub-coroutines executed transparently by
@@ -46,7 +46,6 @@ class EventLoop:
     def call_soon(self, callback, *args):
         if __debug__ and DEBUG:
             log.debug("Scheduling in runq: %s", (callback, args))
-        #print("len =", len(self.runq))
         self.runq.append(callback)
         if not isinstance(callback, type_gen):
             self.runq.append(args)
@@ -220,7 +219,7 @@ class IOWriteDone(SysCall1):
 
 _event_loop = None
 _event_loop_class = EventLoop
-def get_event_loop(runq_len=16, waitq_len=16):
+def get_event_loop(runq_len=32, waitq_len=32):
     global _event_loop
     if _event_loop is None:
         _event_loop = _event_loop_class(runq_len, waitq_len)
