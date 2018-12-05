@@ -1,8 +1,12 @@
-from views import Button
-from tab1 import Tab1
-from tab2 import Tab2
-from tab3 import Tab3
-from utils import colors
+from ui.views import Button
+from ui.tab1 import Tab1
+from ui.tab2 import Tab2
+from ui.tab3 import Tab3
+from ui.utils import colors
+
+import uasyncio as asyncio
+
+import gc
 
 class Screen:
     """Main screen"""
@@ -11,15 +15,18 @@ class Screen:
     status_error = False
     error_msg = ""
 
-    def __init__(self, lcd):
+    def __init__(self, lcd, makhina_control):
         self.lcd = lcd
-        self.tab_buttons = [Button(lcd, 42 * i, 0, 42, 30, str(i + 1)) for i in range(3)]
+        self.tab_buttons = [Button(lcd, 42 * i, 0, 42, 20, str(i + 1)) for i in range(3)]
         self.tab_buttons[0].handler = lambda: 1
         self.tab_buttons[1].handler = lambda: 2
         self.tab_buttons[2].handler = lambda: 3
-        self.tabs = [Tab1(lcd), Tab2(lcd), Tab3(lcd)]
-        self.error_button = Button(lcd, 0, 125, 128, 30, "")
+        print(gc.mem_free())
+        self.tabs = [Tab1(lcd, makhina_control), Tab2(lcd), Tab3(lcd, makhina_control)]
+        self.error_button = Button(lcd, 0, 135, 128, 15, "")
         self.error_button.handler = self.notify_error
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.handle_lcd_touch())
 
     def draw(self):
         """Draw tab buttons, errors and current tab"""
@@ -33,18 +40,25 @@ class Screen:
         if self.status_error:
             self.draw_error()        
 
+    async def handle_lcd_touch(self):
+        while True:
+            touch, x, y = self.lcd.get_touch()
+            if touch: 
+                result = self.handle_touch(x, y)
+                if result:
+                    self.draw()
+                    await asyncio.sleep_ms(200)
+            await asyncio.sleep_ms(50)
+
     def handle_touch(self, x, y):
         """Delegates touch handling to error_button,
            then to buttons and then to current tab"""
 
-        if self.status_error:
-            result = self.error_button.handle_touch(x,y)
-            if result: return 1
+        if self.status_error and self.error_button.handle_touch(x,y): return 1
         for button in self.tab_buttons:
             result = button.handle_touch(x, y)
             if result: break
-        if result:
-            if self.current_tab_number != result - 1:
+        if result and self.current_tab_number != result - 1:
                 self.tabs[self.current_tab_number].clear()
                 self.current_tab_number = result - 1
                 return result
