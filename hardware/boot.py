@@ -4,9 +4,9 @@ import machine
 
 from pyb import Pin
 from pyb import Timer
-
 import uasyncio as asyncio
 
+from mainconfig import lcd_pins
 from ui.screen import Screen
 from makhina.control import MakhinaControl
 
@@ -15,7 +15,7 @@ micropython.alloc_emergency_exception_buf(100)
 
 loop = asyncio.get_event_loop()
 # lcd
-lcd = lcd160cr.LCD160CR('XY')
+lcd = lcd160cr.LCD160CR(lcd_pins)
 lcd.set_orient(lcd160cr.PORTRAIT)
 lcd.set_pen(lcd.rgb(255, 255, 255), lcd.rgb(0, 0, 0))
 lcd.set_brightness(29)

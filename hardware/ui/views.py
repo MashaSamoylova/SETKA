@@ -131,6 +131,24 @@ class EditableButton(Button):
         if self.toggled: bg, fg = fg, bg
         self.draw_char(fg, bg, self.char_editing)
 
+    def plus(self):
+        new_digit = (int(self.text[self.char_editing]) + 1)%10
+        self.text = self.text[:self.char_editing] + str(new_digit)\
+                    + self.text[self.char_editing + 1:]
+        self.draw_normal()
+
+    def minus(self):
+        new_digit = (int(self.text[self.char_editing]) - 1)%10
+        self.text = self.text[:self.char_editing] + str(new_digit)\
+                    + self.text[self.char_editing + 1:]
+        self.draw_normal()
+
+    def right(self):
+        next_index = (self.char_editing + 1) % len(self.text)
+        self.char_editing += 1 if self.text[next_index] in '0123456789' else 2
+        self.char_editing %= len(self.text)
+        self.draw_normal()
+
     def draw_char(self, fg, bg, number):
         """Draw single character of text in fg, bg colors"""
 

@@ -3,6 +3,11 @@ import math
 
 
 class Motor:
+    
+    impulse_width = 9000
+    __gz_current = 0
+    __gz_new = 0
+
     def __init__(self, timer, pin, const, channel):
         self.timer = timer
         self.pin = pin
@@ -10,9 +15,6 @@ class Motor:
         #константа количество импульсов для одного оборота
         self.const = const
         self.channel = channel
-        self.__gz_current = 0
-        self.__gz_new = 0
-        self.impulse_width = 9000
 
     def set_round_per_min(self, rpm):
         print(rpm)
@@ -25,7 +27,7 @@ class Motor:
         print("accel")
         print("new:", self.__gz_new)
         print("current: ", self.__gz_current)
-        if self.__gz_current == 0 and self.__gz_new > self.__gz_current:
+        if not self.__gz_current and self.__gz_new > self.__gz_current:
             print("ускорение")
             self.timer.init(freq=1)
             ch = self.timer.channel(self.channel, pyb.Timer.PWM, pin=self.pin, pulse_width=self.impulse_width)
@@ -37,7 +39,7 @@ class Motor:
         else:
             self.__gz_current = self.__gz_new
 
-        if self.__gz_current == 0:
+        if not self.__gz_current:
             self.timer.deinit()
         else:
             self.timer.freq(self.__gz_current)

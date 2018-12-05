@@ -1,25 +1,31 @@
 from pyb import Pin, Timer
 
+from mainconfig import extruder_pulse_pin, first_head_pulse_pin,\
+                       second_head_pulse_pin, reciever_pulse_pin,\
+                       motors_enable_pin, motors_stop_pin
 from makhina.motor import Motor
 
 
 class Makhina:
     def __init__(self):
-        self.extrudo_engine = Motor(Timer(2), Pin('Y3', Pin.OUT), 5000, 3)
-        self.first_head_engine = Motor(Timer(3), Pin('Y12', Pin.OUT), 18000, 4)
-        self.second_head_engine = Motor(Timer(1), Pin('Y6', Pin.OUT), 18000, 1)
-        self.reciever_engine = Motor(Timer(4), Pin('X9', Pin.OUT), 3200, 1)
+        self.extrudo_engine = Motor(Timer(2), Pin(extruder_pulse_pin, Pin.OUT), 5000, 3)
+        self.first_head_engine = Motor(Timer(3), Pin(first_head_pulse_pin, Pin.OUT), 18000, 4)
+        self.second_head_engine = Motor(Timer(1), Pin(second_head_pulse_pin, Pin.OUT), 18000, 1)
+        self.reciever_engine = Motor(Timer(4), Pin(reciever_pulse_pin, Pin.OUT), 3200, 1)
+
+        self.engines = [self.extrudo_engine, self.first_head_engine,
+                        self.second_head_engine, reciever_engine]
 
         # Подаем питание на шаговики
-        self.enablePulse = Pin('Y5', Pin.OUT)
-        self.enablePulseReceiver = Pin('Y7', Pin.OUT)
+        self.enablePulse = Pin(motors_enable_pin, Pin.OUT)
+        self.enablePulseReceiver = Pin(motors_stop_pin, Pin.OUT)
         self.enablePulse.low()
         self.enablePulseReceiver.low()
     
     def start(self):
-        for engine in [self.extrudo_engine, self.first_head_engine, self.second_head_engine, self.reciever_engine]:
+        for engine in self.engines:
             engine.accel()
 
     def stop(self):
-        for engine in [self.extrudo_engine, self.first_head_engine, self.second_head_engine, self.reciever_engine]:
+        for engine in self.engines:
             engine.stop()
