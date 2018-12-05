@@ -4,6 +4,8 @@ from ui.tab2 import Tab2
 from ui.tab3 import Tab3
 from ui.utils import colors
 
+import uasyncio as asyncio
+
 class Screen:
     """Main screen"""
 
@@ -20,6 +22,8 @@ class Screen:
         self.tabs = [Tab1(lcd, makhina_control), Tab2(lcd), Tab3(lcd, makhina_control)]
         self.error_button = Button(lcd, 0, 135, 128, 15, "")
         self.error_button.handler = self.notify_error
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.handle_lcd_touch())
 
     def draw(self):
         """Draw tab buttons, errors and current tab"""
@@ -32,6 +36,16 @@ class Screen:
         self.tabs[self.current_tab_number].draw()
         if self.status_error:
             self.draw_error()        
+
+    async def handle_lcd_touch(self):
+        while True:
+            touch, x, y = self.lcd.get_touch()
+            if touch: 
+                result = self.handle_touch(x, y)
+                if result:
+                    self.draw()
+                    await asyncio.sleep_ms(200)
+            await asyncio.sleep_ms(50)
 
     def handle_touch(self, x, y):
         """Delegates touch handling to error_button,

@@ -27,9 +27,6 @@ class Tab1:
         for anal_butt in self.analog_buttons:
             anal_butt.enabled = False
 
-        self.makhina_control.plus_button.handler = self.plus_handler
-        self.makhina_control.minus_button.handler = self.minus_handler
-        self.makhina_control.right_button.handler = self.right_handler
 
         self.change_button = Button(lcd, 0, 125, 128, 30, "Change")
 
@@ -42,10 +39,14 @@ class Tab1:
 
     def draw(self):
         self.is_draw = True
-        self.extrudo_button.text =  self.makhina_control.extrudo_speed
-        self.first_head_button.text = self.makhina_control.first_head_speed
-        self.second_head_button.text = self.makhina_control.second_head_speed
-        self.acceptance_button.text = self.makhina_control.reciever_speed
+        self.makhina_control.plus_button.handler = self.plus_handler
+        self.makhina_control.minus_button.handler = self.minus_handler
+        self.makhina_control.right_button.handler = self.right_handler
+        if not self.edit_mode:
+            self.extrudo_button.text =  self.makhina_control.extrudo_speed
+            self.first_head_button.text = self.makhina_control.first_head_speed
+            self.second_head_button.text = self.makhina_control.second_head_speed
+            self.acceptance_button.text = self.makhina_control.reciever_speed
 
         self.extrudo_button.draw_normal()
         self.first_head_button.draw_normal()
@@ -59,7 +60,7 @@ class Tab1:
             self.change_button.draw_normal()
     
     def change_handler(self):
-        self.edit_mode_on(1)
+        self.edit_mode_on()
         return 1
 
     def ok_handler(self):
@@ -77,9 +78,10 @@ class Tab1:
             self.engines_buttons[self.cur_button - 1].draw_normal()
         self.cur_button = 0 if n == self.cur_button else n
 
-    def edit_mode_on(self, n):
+    def edit_mode_on(self):
         self.edit_mode = True
         self.toggle_button_highlight(1)
+        self.engines_buttons[self.cur_button - 1].edit_mode = True
         for anal_butt in self.analog_buttons:
             anal_butt.enabled = True
 
@@ -93,26 +95,13 @@ class Tab1:
         self.cur_button = 0
 
     def plus_handler(self):
-        butt = self.engines_buttons[self.cur_button - 1]
-        index = butt.char_editing
-        string = butt.text
-        digit = (int(string[index]) + 1)%10
-        butt.text = string[:index] + str(digit) + string[index + 1:]
-        butt.draw_normal()
+        self.engines_buttons[self.cur_button - 1].plus()
     
     def minus_handler(self):
-        butt = self.engines_buttons[self.cur_button - 1]
-        index = butt.char_editing
-        string = butt.text
-        digit = (int(string[index]) - 1)%10
-        butt.text = string[:index] + str(digit) + string[index + 1:]
-        butt.draw_normal()
+        self.engines_buttons[self.cur_button - 1].minus()
 
     def right_handler(self):
-        butt = self.engines_buttons[self.cur_button - 1]
-        butt.draw_normal()
-        butt.char_editing += 1 if butt.text[(butt.char_editing + 1) % len(butt.text)] != "." else 2
-        butt.char_editing %= len(butt.text)
+        self.engines_buttons[self.cur_button - 1].right()
 
     def handle_touch(self, x, y):
         if self.edit_mode:
