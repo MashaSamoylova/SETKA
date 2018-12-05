@@ -44,7 +44,8 @@ class MakhinaControl:
         self.makhina.reciever_engine.set_round_per_min(float(self.reciever_speed))
 
         with open("./recipes/" + self.config, "w") as f:
-            f.write(";".join([self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed]))
+            f.write(";".join([self.extrudo_speed, self.first_head_speed,
+                              self.second_head_speed, self.reciever_speed]))
             print("writing at ./recipes/" + self.config)
 
     def change_current_config(self):
