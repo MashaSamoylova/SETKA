@@ -10,6 +10,7 @@ from mainconfig import lcd_pins
 from ui.screen import Screen
 from makhina.control import MakhinaControl
 
+
 # set more detailed information on the exception
 micropython.alloc_emergency_exception_buf(100)
 

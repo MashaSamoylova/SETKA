@@ -6,6 +6,8 @@ from ui.utils import colors
 
 import uasyncio as asyncio
 
+import gc
+
 class Screen:
     """Main screen"""
 
@@ -19,6 +21,7 @@ class Screen:
         self.tab_buttons[0].handler = lambda: 1
         self.tab_buttons[1].handler = lambda: 2
         self.tab_buttons[2].handler = lambda: 3
+        print(gc.mem_free())
         self.tabs = [Tab1(lcd, makhina_control), Tab2(lcd), Tab3(lcd, makhina_control)]
         self.error_button = Button(lcd, 0, 135, 128, 15, "")
         self.error_button.handler = self.notify_error
