@@ -11,10 +11,12 @@ from ui.screen import Screen
 from makhina.control import MakhinaControl
 
 
+hot_melt = 
+error_objects = []
+
 # set more detailed information on the exception
 micropython.alloc_emergency_exception_buf(100)
 
-loop = asyncio.get_event_loop()
 # lcd
 lcd = lcd160cr.LCD160CR(lcd_pins)
 lcd.set_orient(lcd160cr.PORTRAIT)
