@@ -1,6 +1,7 @@
 import sys
 import pathlib
 import os
+import threading
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
@@ -9,7 +10,10 @@ from matplotlib.figure import Figure
 from mainwindow import Ui_MainWindow
 from settings import Ui_Dialog
 from editordialog import Ui_EditorDialog
+from connectdialog import Ui_Dialog as Ui_ConnectDialog
+from pyboard import PyBoard
 
+pyboard = PyBoard()
 
 class MatplotlibWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -26,9 +30,6 @@ class MatplotlibWidget(QtWidgets.QWidget):
 
 class SETKAapp(Ui_MainWindow):
 
-    board_dir = '/home/roman/setka_test'
-    board_connected = True
-
     def __init__(self):
         self.app = QtWidgets.QApplication(sys.argv)
         self.MainWindow = QtWidgets.QMainWindow()
@@ -38,13 +39,12 @@ class SETKAapp(Ui_MainWindow):
         self.press_graph = MatplotlibWidget(self.MainWindow)
         self.graphs_layout.addWidget(self.temp_graph)
         self.graphs_layout.addWidget(self.press_graph)
-        
         self.connect_slots()
-
         self.datetime = QtCore.QDateTime.currentDateTime()
         timer = QtCore.QTimer(self.app)
         timer.timeout.connect(self.update)
         timer.start(1000)
+
 
     def update(self):
         """Called every second"""
@@ -52,6 +52,11 @@ class SETKAapp(Ui_MainWindow):
         self.datetime = self.datetime.addSecs(1)
         self.main_table.item(13, 0).setText(self.datetime.time().toString())
         self.main_table.item(14, 0).setText(self.datetime.date().toString())
+        self.main_table.item(1, 0).setText(''.join(pyboard.extruder_speed))
+        self.main_table.item(2, 0).setText(''.join(pyboard.first_head_speed))
+        self.main_table.item(3, 0).setText(''.join(pyboard.second_head_speed))
+        self.main_table.item(4, 0).setText(''.join(pyboard.reciever_speed))
+        self.main_table.item(12, 0).setText(''.join(pyboard.config))
 
     def connect_slots(self):
         slots = [x.triggered for x in [self.connect_pyboard_button,
@@ -64,10 +69,8 @@ class SETKAapp(Ui_MainWindow):
             slot.connect(callback)
 
     def on_connect_button(self):
-        directory = QtWidgets.QFileDialog.getExistingDirectory()
-        self.board_dir = directory
-        self.board_connected = True
-
+            dlg = ConnectDialog()
+            dlg.exec_()
 
     def on_build_graph(self):
         graph_file = QtWidgets.QFileDialog.getOpenFileName(directory=self.board_dir,
@@ -158,6 +161,33 @@ class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
         else:
             self.fill_speeds(speeds)
 
+class ConnectDialog(QtWidgets.QDialog, Ui_ConnectDialog):
+
+    def __init__(self, parent=None):
+        QtWidgets.QDialog.__init__(self, parent)
+        self.setupUi(self)
+        self.connect_butt.clicked.connect(self.on_connect)
+        self.port_edit.setText('/dev/ttyUSB0')
+
+    def log(self, text):
+        self.status_label.setText(text)
+
+    def on_connect(self):
+        port = self.port_edit.text()
+        if not port: self.log('Invalid port')
+        else:
+            self.log('Trying to connect...')
+            thread = threading.Thread(target=pyboard.connect,
+                                      args=(port, self.on_connected))
+            thread.daemon = True
+            thread.start()
+
+    def on_connected(self, res):
+        if res == 1:
+            self.log('PyBoard connected!')
+        if not res:
+            self.log('Connecting error')
+            
 
 class SettingsDialog(QtWidgets.QDialog, Ui_Dialog):
 
@@ -172,5 +202,8 @@ class SettingsDialog(QtWidgets.QDialog, Ui_Dialog):
         self.new_datetime = new_datetime
 
 if __name__ == "__main__":
+    thread = threading.Thread(target=pyboard.run)
+    thread.daemon = True
+    thread.start()
     app = SETKAapp()
     app.run()

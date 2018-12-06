@@ -9,6 +9,7 @@ import uasyncio as asyncio
 from mainconfig import lcd_pins
 from ui.screen import Screen
 from makhina.control import MakhinaControl
+from pc import Computer
 
 
 # set more detailed information on the exception
@@ -25,3 +26,4 @@ lcd.erase()
 # gui
 makhina_control = MakhinaControl()
 main_screen = Screen(lcd, makhina_control)
+computer = Computer(makhina_control)
