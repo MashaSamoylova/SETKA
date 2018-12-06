@@ -7,6 +7,7 @@ from umodbus import conf
 from umodbus.server.serial import get_server
 from umodbus.server.serial.rtu import RTUServer
 from umodbus.utils import log_to_stream
+import os
 
 class PyBoard():
 
@@ -39,7 +40,7 @@ class PyBoard():
             return self.cmd
 
     def on_write_reg(self, slave_id, function_code, address, value):
-        print(address, value)
+        print(address, chr(value))
         if address in list(range(5, 10)):
             self.extruder_speed[address % 5] = chr(value)
         if address in list(range(10, 15)):

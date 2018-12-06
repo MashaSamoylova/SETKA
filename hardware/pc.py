@@ -16,19 +16,23 @@ class Computer:
         loop.create_task(self.serve())
 
     def send_string(self, starting_address, text):
-        #try:
-        self.connection.write_multiple_registers(slave_addr, starting_address, list(map(ord, zfill(text, 5)[:5])))
-        #except Exception as e:
-        #    print(e)
+        try:
+            self.connection.write_multiple_registers(slave_addr, starting_address, list(map(ord, text)))
+        except Exception as e:
+            print(e)
 
     def send_sets_request(self):
         print('Sending sets')
-        print(self.control.extrudo_speed)
-        self.send_string(5, self.control.extrudo_speed)
-        self.send_string(10, self.control.first_head_speed)
-        self.send_string(15, self.control.second_head_speed)
-        self.send_string(20, self.control.reciever_speed)
-        self.send_string(25, self.control.config)
+        self.send_string(5, "".join(zfill(x, 5) for x in [
+            self.control.extrudo_speed, 
+            self.control.first_head_speed, 
+            self.control.second_head_speed, 
+            self.control.reciever_speed]))
+        print("end sending")
+      #  self.send_string(10, self.control.first_head_speed)
+      #  self.send_string(15, self.control.second_head_speed)
+      #  self.send_string(20, self.control.reciever_speed)
+      #  self.send_string(25, self.control.config)
 
     def get_and_process_command(self):
         try:
@@ -51,4 +55,4 @@ class Computer:
                         self.connected = True
                 except Exception as e:
                     print(e)
-            await asyncio.sleep_ms(100)
+            await asyncio.sleep_ms(1000)
