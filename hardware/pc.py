@@ -15,44 +15,53 @@ class Computer:
         loop = asyncio.get_event_loop()
         loop.create_task(self.serve())
 
-    def send_string(self, starting_address, text):
+    async def send_string(self, starting_address, text):
         try:
-            self.connection.write_multiple_registers(slave_addr, starting_address, list(map(ord, text)))
+            await self.connection.write_multiple_registers(slave_addr, starting_address, list(map(ord, text)))
         except Exception as e:
             print(e)
 
-    def send_sets_request(self):
+    async def send_sets_request(self):
         print('Sending sets')
-        self.send_string(5, "".join(zfill(x, 5) for x in [
+        await self.send_string(5, "".join(zfill(x, 5) for x in [
             self.control.extrudo_speed, 
             self.control.first_head_speed, 
             self.control.second_head_speed, 
             self.control.reciever_speed]))
         print("end sending")
-      #  self.send_string(10, self.control.first_head_speed)
-      #  self.send_string(15, self.control.second_head_speed)
-      #  self.send_string(20, self.control.reciever_speed)
-      #  self.send_string(25, self.control.config)
 
-    def get_and_process_command(self):
+    async def clear_command(self):
+        print("cleare_command")
+        await self.connection.write_single_register(slave_addr, 0x2, 0)
+
+    async def get_and_process_command(self):
+        print("get_and_process_command")
         try:
-            cmd = self.connection.read_holding_registers(slave_addr, 0x2, 1, False)[0]
+            print("try")
+            cmd = await self.connection.read_holding_registers(slave_addr, 0x2, 1, False)
+            cmd = cmd[0]
+            print("cmd:", cmd)
         except Exception as e:
+            print(e)
             if str(e) == 'no data received from slave':
                 self.connected = False
         else:
             if cmd == 2:
-                self.send_sets_request()
+                await self.send_sets_request()
+                await self.clear_command()
+                
 
     async def serve(self):
         while True:
+            print("serve")
             if self.connected:
-                self.get_and_process_command()
+                await self.get_and_process_command()
             else:
                 try:
-                    return_flag = self.connection.write_single_coil(slave_addr, 0x1, 0xFF00)
+                    return_flag = await self.connection.write_single_coil(slave_addr, 0x1, 0xFF00)
+                    print("return flag:", return_flag)
                     if return_flag:
                         self.connected = True
                 except Exception as e:
                     print(e)
-            await asyncio.sleep_ms(1000)
+            await asyncio.sleep_ms(500)

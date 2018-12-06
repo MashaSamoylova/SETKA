@@ -32,12 +32,17 @@ class PyBoard():
     def build_server(self):
         self.server.route_map.add_rule(self.on_read_reg, [5], [3], [2])
         self.server.route_map.add_rule(self.on_write_reg, [5], [16], list(range(256)))
+        self.server.route_map.add_rule(self.on_write_single_reg, [5], [6], list(range(256)))
         self.cmd = 0x2
 
     def on_read_reg(self, slave_id, function_code, address):
         print('address', address)
         if address == 2:
             return self.cmd
+
+    def on_write_single_reg(self, slave_id, function_code, address, value):
+        if address == 2:
+            self.cmd = value
 
     def on_write_reg(self, slave_id, function_code, address, value):
         print(address, chr(value))
