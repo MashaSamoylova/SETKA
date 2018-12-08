@@ -89,8 +89,7 @@ class Tab3:
 
         if self.makhina_control.config != self.config_string.text:
             print("CHANGED CONFIG", self.config_string.text)
-            self.makhina_control.config = self.config_string.text
-            self.makhina_control.change_current_config()
+            self.makhina_control.change_current_config(self.config_string.text)
         
         hour, minute, second = self.time_string.text.split(":")
         year, month, day = self.date_string.text.split(":")

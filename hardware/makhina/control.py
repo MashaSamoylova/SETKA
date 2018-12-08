@@ -1,12 +1,28 @@
 import machine
+from pyb import RTC
 
 import uasyncio as asyncio
 
 from mainconfig import up_button_pin, down_button_pin,\
                        right_button_pin, start_button_pin, stop_button_pin
 from makhina.makhina import Makhina
+from ui.utils import count_time_diff
 
 class MakhinaControl:
+
+    log = None
+    log_name = ''
+    log_time = None
+    t1 = '000.0'
+    t2 = '000.0'
+    p1 = '000.0'
+    p2 = '000.0'
+    config = '000'
+    extrudo_speed = ""
+    first_head_speed = ""
+    second_head_speed = ""
+    reciever_speed = ""
+
     def __init__(self):
         self.makhina = Makhina()
         
@@ -20,17 +36,29 @@ class MakhinaControl:
         self.stop_button.handler = self.stop
 
         # скорости в форме строки, чтобы не переводить из частоты обратно
-        self.extrudo_speed = ""
-        self.first_head_speed = ""
-        self.second_head_speed = ""
-        self.reciever_speed = ""
 
-        self.config = "000"
-        self.change_current_config()
+        self.change_current_config('000')
+        self.rtc = RTC()
         print("INIT SPEEDS")
+
+    def start_new_log(self):
+        if self.log: self.log.close()
+        *_, month, day, _, hours, minutes, seconds, _ = self.rtc.datetime()
+        self.log_time = (month, day, hours, minutes, seconds)
+        self.log_name = '.'.join(zfill(str(x), 2) for x in self.log_time)
+        self.log = open(self.log_name, 'w')
+
+    def log_new_data(self, new_data):
+        self.t1, self.t2, self.p1, self.p2 = new_data
+        *_, month, day, _, hours, minutes, seconds, _ = self.rtc.datetime()
+        new_time = (month, day, hours, minutes, seconds)
+        if count_time_diff(self.log_time, new_time) // 60 >= 15:
+            self.start_new_log()
+        self.log.write(';'.join(new_data) + '\n')
 
     def start(self):
         self.makhina.start()
+        start_new_log()
 
     def stop(self):
         self.makhina.stop()
@@ -43,18 +71,19 @@ class MakhinaControl:
         self.makhina.second_head_engine.set_round_per_min(float(self.second_head_speed))
         self.makhina.reciever_engine.set_round_per_min(float(self.reciever_speed))
 
-        with open("./recipes/" + self.config, "w") as f:
+        with open("/sd/recipes/" + self.config, "w") as f:
             f.write(";".join([self.extrudo_speed, self.first_head_speed,
                               self.second_head_speed, self.reciever_speed]))
-            print("writing at ./recipes/" + self.config)
+            print("writing at /sd/recipes/" + self.config)
 
-    def change_current_config(self):
+    def change_current_config(self, config):
+        self.config = config
         print("current_config", self.config)
         try:
-            with open("./recipes/" + self.config) as f:
+            with open("/sd/recipes/" + self.config) as f:
                 speeds = f.read()
         except:
-            with open("./recipes/" + self.config, "w") as f:
+            with open("/sd/recipes/" + self.config, "w") as f:
                 speeds = ";".join(["000.0", "0.0", "0.0", "0.0"])
                 f.write(speeds)
 

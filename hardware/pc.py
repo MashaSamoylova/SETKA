@@ -1,6 +1,4 @@
 import uasyncio as asyncio
-from uModBus.serial import Serial
-from mainconfig import uart_ctrl_pin
 from ui.utils import zfill
 
 slave_addr=0x05
@@ -9,59 +7,80 @@ class Computer:
 
     connected = False
 
-    def __init__(self, control):
-        self.connection = Serial(6, ctrl_pin=uart_ctrl_pin)
+    def __init__(self, server, control):
+        self.server = server
         self.control = control
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.serve())
 
-    async def send_string(self, starting_address, text):
-        try:
-            await self.connection.write_multiple_registers(slave_addr, starting_address, list(map(ord, text)))
-        except Exception as e:
-            print(e)
+    async def send_recipe(self, recipe):
+        print('sendrecipe', recipe)
+        recipe = recipe - 1
+        return await self.server.send_string(slave_addr, 
+                                             50, "".join(zfill(x, 5) for x in [
+                                             self.control.extrudo_speed, 
+                                             self.control.first_head_speed, 
+                                             self.control.second_head_speed, 
+                                             self.control.reciever_speed]))
+
+    async def get_save_recipe(self, recipe):
+        print('safe recipe')
+        recipe = recipe - 1
+        recipe_value = await self.server.get_string(slave_addr, 50, 20)
+        print('recipe num is ', recipe)
+        print('recipe_value is ', recipe_value)
+        recipe_values = [''.join(recipe_value[i*5:(i+1)*5]) for i in range(4)]
+        recipe_values = ['{0:.1f}'.format(float(x)) for x in recipe_values]
+        recipe_values[0] = zfill(5, recipe_values[0])
+        recipe_values[1:] = [x[-3:] for x in recipe_values[1:]]
+        print(recipe_values)
+        self.control.change_current_config(zfill(str(recipe), 3))
+        self.control.set_speeds(recipe_values)
+        print('recipe saved')
 
     async def send_sets_request(self):
-        print('Sending sets')
-        await self.send_string(5, "".join(zfill(x, 5) for x in [
+        print('Sending sets and data')
+        res = await self.server.send_string(slave_addr, 5, "".join(zfill(x, 5) for x in [
             self.control.extrudo_speed, 
             self.control.first_head_speed, 
             self.control.second_head_speed, 
-            self.control.reciever_speed]))
+            self.control.reciever_speed,
+            self.control.config,
+            self.control.t1,
+            self.control.t2,
+            self.control.p1,
+            self.control.p2]))
         print("end sending")
+        return res
 
     async def clear_command(self):
-        print("cleare_command")
-        await self.connection.write_single_register(slave_addr, 0x2, 0)
+        print("clear_command")
+        await self.server.connection.write_single_register(slave_addr, 0x2, 0)
+        await self.server.connection.write_single_register(slave_addr, 0x3, 0)
 
     async def get_and_process_command(self):
-        print("get_and_process_command")
         try:
-            print("try")
-            cmd = await self.connection.read_holding_registers(slave_addr, 0x2, 1, False)
-            cmd = cmd[0]
-            print("cmd:", cmd)
+            cmd = await self.server.connection.read_holding_registers(slave_addr, 0x2, 2, False)
+            cmd, arg = cmd
+            print("cmd:", cmd, "arg:", arg)
         except Exception as e:
             print(e)
             if str(e) == 'no data received from slave':
                 self.connected = False
         else:
-            if cmd == 2:
-                await self.send_sets_request()
-                await self.clear_command()
-                
+            res = None
+            if cmd: await self.clear_command()
+            if not cmd:
+                res = await self.send_sets_request()
+            if cmd == 3 and arg:
+                res = await self.send_recipe(arg)
+            if cmd == 4 and arg:
+                res = await self.get_save_recipe(arg)
 
-    async def serve(self):
-        while True:
-            print("serve")
-            if self.connected:
-                await self.get_and_process_command()
-            else:
-                try:
-                    return_flag = await self.connection.write_single_coil(slave_addr, 0x1, 0xFF00)
-                    print("return flag:", return_flag)
-                    if return_flag:
-                        self.connected = True
-                except Exception as e:
-                    print(e)
-            await asyncio.sleep_ms(500)
+    async def try_connect(self):
+        try:
+            return_flag = await self.server.connection.write_single_coil(slave_addr, 0x1, 0xFF00)
+            print("return flag:", return_flag)
+            if return_flag:
+                await asyncio.sleep_ms(100)
+                self.connected = True
+        except Exception as e:
+            print(e)

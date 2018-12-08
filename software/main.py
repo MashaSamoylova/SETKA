@@ -5,13 +5,14 @@ import threading
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.figure import Figure
-
+from matplotlib.figure import Figure 
 from mainwindow import Ui_MainWindow
 from settings import Ui_Dialog
 from editordialog import Ui_EditorDialog
 from connectdialog import Ui_Dialog as Ui_ConnectDialog
 from pyboard import PyBoard
+
+import time
 
 pyboard = PyBoard()
 
@@ -45,7 +46,6 @@ class SETKAapp(Ui_MainWindow):
         timer.timeout.connect(self.update)
         timer.start(1000)
 
-
     def update(self):
         """Called every second"""
 
@@ -56,6 +56,10 @@ class SETKAapp(Ui_MainWindow):
         self.main_table.item(2, 0).setText(''.join(pyboard.first_head_speed))
         self.main_table.item(3, 0).setText(''.join(pyboard.second_head_speed))
         self.main_table.item(4, 0).setText(''.join(pyboard.reciever_speed))
+        self.main_table.item(6, 0).setText(''.join(pyboard.t1))
+        self.main_table.item(7, 0).setText(''.join(pyboard.t2))
+        self.main_table.item(8, 0).setText(''.join(pyboard.p1))
+        self.main_table.item(9, 0).setText(''.join(pyboard.p2))
         self.main_table.item(12, 0).setText(''.join(pyboard.config))
 
     def connect_slots(self):
@@ -97,11 +101,11 @@ class SETKAapp(Ui_MainWindow):
             self.press_graph.canvas.draw()
         
     def on_open_editor(self):
-        if not self.board_connected:
+        if not pyboard.connected:
             QtWidgets.QMessageBox.warning(self.MainWindow, "Ошибка",
                                 "PyBoard не подключен, используйте Меню->Покдлючить PyBoard")
         else:
-            dlg = EditorDialog(self.board_dir)
+            dlg = EditorDialog()
             dlg.exec_()
 
     def on_open_settings(self):
@@ -116,63 +120,89 @@ class SETKAapp(Ui_MainWindow):
 
 class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
 
-    def __init__(self, directory, parent=None):
+    load_finished_signal = QtCore.pyqtSignal(int, name='load_finished_signal')
+    save_finished_signal = QtCore.pyqtSignal(int, name='save_finished_signal')
+    speeds = None
+
+    def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
-        self.directory = os.path.join(directory, 'recipes')
-        pathlib.Path(self.directory).mkdir(parents=True, exist_ok=True)
         self.setupUi(self)
         self.save_button.clicked.connect(self.on_save)
         self.open_button.clicked.connect(self.on_load)
+        self.load_finished_signal.connect(self.on_load_finished, QtCore.Qt.QueuedConnection)
+        self.save_finished_signal.connect(self.on_save_finished, QtCore.Qt.QueuedConnection)
 
     def warn(self, text):
         self.warning_label.setText(text)
 
     def choosen_file(self):
-        filename = str(self.recipe_spin_box.value()).zfill(2) + ".txt"
-        return os.path.join(self.directory, filename)
+        return str(self.recipe_spin_box.value()).zfill(3)
 
     def fill_speeds(self, speeds):
-        self.e1_edit.setText(str(speeds[0]))
-        self.e2_edit.setText(str(speeds[1]))
-        self.e3_edit.setText(str(speeds[2]))
-        self.e4_edit.setText(str(speeds[3]))
+        self.e1_edit.setText(speeds[0])
+        self.e2_edit.setText(speeds[1])
+        self.e3_edit.setText(speeds[2])
+        self.e4_edit.setText(speeds[3])
+
+    def on_save_finished(self, status):
+        self.warn('Конфиг сохранен!')
+
+    def wait_for_save(self):
+        while pyboard.cmd:
+            time.sleep(0.1)
+        self.save_finished_signal.emit(1)
 
     def on_save(self):
         try:
-            speeds = [float(self.e1_edit.text()), float(self.e2_edit.text()),
-                      float(self.e3_edit.text()), float(self.e4_edit.text())]
-            with open(self.choosen_file(), 'w') as f:
-                f.write(';'.join([str(x) for x in speeds]))
+            speeds = [str(float(self.e1_edit.text())).zfill(5), str(float(self.e2_edit.text())).zfill(5),
+                      str(float(self.e3_edit.text())).zfill(5), str(float(self.e4_edit.text())).zfill(5)]
         except:
             QtWidgets.QMessageBox.warning(self, "Ошибка", "Некорректный формат!")
         else:
-            self.warn('Сохранено!')
+            self.warn('Загружаем в PyBoard')
+            pyboard.config_value = [x for i in speeds for x in i]
+            pyboard.arg = int(self.choosen_file()) + 1
+            pyboard.cmd = 4
+            save_thread = threading.Thread(target=self.wait_for_save)
+            save_thread.daemon = True
+            save_thread.start()
+
+    def on_load_finished(self, status):
+        self.fill_speeds(self.speeds)
+        self.warn('Конфиг получен!')
+
+    def wait_for_load(self):
+        while pyboard.cmd:
+            time.sleep(0.1)
+        self.speeds = [''.join(pyboard.config_value[i*5:(i+1)*5]) for i in range(4)]
+        print(self.speeds)
+        self.load_finished_signal.emit(1)
 
     def on_load(self):
-        speeds = []
-        recipe_file = self.choosen_file()
-        try:
-            with open(recipe_file) as f:
-                speeds = [float(x.strip()) for x in f.read().split(';')]
-        except FileNotFoundError:
-            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Рецепт {recipe_file} не существует!")
-        except:
-            QtWidgets.QMessageBox.warning(self, "Ошибка", "Некорректный формат файла!")
-        else:
-            self.fill_speeds(speeds)
+        pyboard.arg = int(self.choosen_file()) + 1
+        pyboard.cmd = 3
+        self.warn('Получаем конфиг с PyBoard')
+        load_thread = threading.Thread(target=self.wait_for_load)
+        load_thread.daemon = True
+        load_thread.start()
+
 
 class ConnectDialog(QtWidgets.QDialog, Ui_ConnectDialog):
+
+    connect_finished_signal = QtCore.pyqtSignal(int, name='connect_finished_signal')
 
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
         self.connect_butt.clicked.connect(self.on_connect)
         self.port_edit.setText('/dev/ttyUSB0')
+        self.connect_finished_signal.connect(self.on_connected)
 
     def log(self, text):
         self.status_label.setText(text)
 
     def on_connect(self):
+        self.connect_butt.setEnabled(False)
         port = self.port_edit.text()
         if not port: self.log('Invalid port')
         else:
@@ -182,7 +212,11 @@ class ConnectDialog(QtWidgets.QDialog, Ui_ConnectDialog):
             thread.daemon = True
             thread.start()
 
+    def on_connect_finished(self, res):
+        self.connect_finished_signal.emit(res)
+
     def on_connected(self, res):
+        self.connect_butt.setEnabled(True)
         if res == 1:
             self.log('PyBoard connected!')
         if not res:
