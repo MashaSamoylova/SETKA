@@ -9,6 +9,7 @@ import uasyncio as asyncio
 from mainconfig import lcd_pins
 from ui.screen import Screen
 from makhina.control import MakhinaControl
+from server import ModbusMaster
 
 
 # set more detailed information on the exception
@@ -25,3 +26,4 @@ lcd.erase()
 # gui
 makhina_control = MakhinaControl()
 main_screen = Screen(lcd, makhina_control)
+master = ModbusMaster(makhina_control)

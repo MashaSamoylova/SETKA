@@ -7,3 +7,10 @@ colors = {
 
 def zfill(s, width):
     return '{:0>{w}}'.format(s, w=width)
+
+def time_to_timestamp(t):
+    return 60 * (60 * (24 * (30 * (t[0]) + t[1]) + t[2]) + t[3]) + t[4]
+
+def count_time_diff(t1, t2):
+    return abs(time_to_timestamp(t1) - time_to_timestamp(t2))
+

@@ -1,27 +1,22 @@
 import uModBus.functions as functions
 import uModBus.const as Const
-from uModBus.common import Request
-from uModBus.common import ModbusException
 from machine import UART
 from machine import Pin
 import struct
 import time
 import machine
+import uasyncio as asyncio
 
 class Serial:
 
     def __init__(self, uart_id, baudrate=9600, data_bits=8, stop_bits=1, parity=None, ctrl_pin=None):
         self._uart = UART(uart_id, baudrate=baudrate, bits=data_bits, parity=parity, \
-                          stop=stop_bits, timeout_char=2)
+                          stop=stop_bits, timeout_char=10, timeout=100)
         if ctrl_pin is not None:
             self._ctrlPin = Pin(ctrl_pin, mode=Pin.OUT)
         else:
             self._ctrlPin = None
-
-        if baudrate <= 19200:
-            self._t35chars = (3500000 * (data_bits + stop_bits + 2)) // baudrate
-        else:
-            self._t35chars = 1750
+        self.char_time_ms = (1000 * (data_bits + stop_bits + 2)) // baudrate
 
     def _calculate_crc16(self, data):
         crc = 0xFFFF
@@ -57,7 +52,7 @@ class Serial:
 
         return True
 
-    def _uart_read(self):
+    async def _uart_read(self):
         response = bytearray()
 
         for x in range(1, 40):
@@ -66,28 +61,11 @@ class Serial:
                 # variable length function codes may require multiple reads
                 if self._exit_read(response):
                     break
-            time.sleep(0.05)
+            await asyncio.sleep_ms(50)
 
         return response
 
-    def _uart_read_frame(self, timeout=None):
-        bytes = bytearray()
-
-        start_ms = time.ticks_ms()
-        while timeout == None or time.ticks_diff(start_ms, time.ticks_ms()) <= timeout:
-            last_byte_ts = time.ticks_us()
-            while time.ticks_diff(last_byte_ts, time.ticks_us()) <= self._t35chars:
-                r = self._uart.read()
-                if r != None:
-                    bytes.extend(r)
-                    last_byte_ts = time.ticks_us()
-
-            if len(bytes) > 0:
-                return bytes
-
-        return bytes
-
-    def _send(self, modbus_pdu, slave_addr):
+    async def _send_receive(self, modbus_pdu, slave_addr, count):
         serial_pdu = bytearray()
         serial_pdu.append(slave_addr)
         serial_pdu.extend(modbus_pdu)
@@ -95,18 +73,18 @@ class Serial:
         crc = self._calculate_crc16(serial_pdu)
         serial_pdu.extend(crc)
 
+        # flush the Rx FIFO
+        if self._uart.any():
+            self._uart.read()
         if self._ctrlPin:
             self._ctrlPin(1)
         self._uart.write(serial_pdu)
         if self._ctrlPin:
-            time.sleep_us(self._t35chars)
+            time.sleep_ms(1 + self.char_time_ms)
             self._ctrlPin(0)
 
-    def _send_receive(self, modbus_pdu, slave_addr, count):
-        # flush the Rx FIFO
-        self._uart.read()
-        self._send(modbus_pdu, slave_addr)
-        return self._validate_resp_hdr(self._uart_read(), slave_addr, modbus_pdu[0], count)
+        resp = await self._uart_read()
+        return self._validate_resp_hdr(resp, slave_addr, modbus_pdu[0], count)
 
     def _validate_resp_hdr(self, response, slave_addr, function_code, count):
 
@@ -128,101 +106,75 @@ class Serial:
 
         return response[hdr_length : len(response) - Const.CRC_LENGTH]
 
-    def read_coils(self, slave_addr, starting_addr, coil_qty):
+    async def read_coils(self, slave_addr, starting_addr, coil_qty):
         modbus_pdu = functions.read_coils(starting_addr, coil_qty)
 
-        resp_data = self._send_receive(modbus_pdu, slave_addr, True)
+        resp_data = await self._send_receive(modbus_pdu, slave_addr, True)
         status_pdu = self._bytes_to_bool(resp_data)
 
         return status_pdu
 
-    def read_discrete_inputs(self, slave_addr, starting_addr, input_qty):
+    async def read_discrete_inputs(self, slave_addr, starting_addr, input_qty):
         modbus_pdu = functions.read_discrete_inputs(starting_addr, input_qty)
 
-        resp_data = self._send_receive(modbus_pdu, slave_addr, True)
+        resp_data = await self._send_receive(modbus_pdu, slave_addr, True)
         status_pdu = self._bytes_to_bool(resp_data)
 
         return status_pdu
 
-    def read_holding_registers(self, slave_addr, starting_addr, register_qty, signed=True):
+    async def read_holding_registers(self, slave_addr, starting_addr, register_qty, signed=True):
+        print("read_holding_registers")
+        print(starting_addr)
         modbus_pdu = functions.read_holding_registers(starting_addr, register_qty)
 
-        resp_data = self._send_receive(modbus_pdu, slave_addr, True)
+        resp_data = await self._send_receive(modbus_pdu, slave_addr, True)
+        print(resp_data)
         register_value = self._to_short(resp_data, signed)
 
         return register_value
 
-    def read_input_registers(self, slave_addr, starting_address, register_quantity, signed=True):
+    async def read_input_registers(self, slave_addr, starting_address, register_quantity, signed=True):
         modbus_pdu = functions.read_input_registers(starting_address, register_quantity)
 
-        resp_data = self._send_receive(modbus_pdu, slave_addr, True)
+        resp_data = await self._send_receive(modbus_pdu, slave_addr, True)
         register_value = self._to_short(resp_data, signed)
 
         return register_value
 
-    def write_single_coil(self, slave_addr, output_address, output_value):
+    async def write_single_coil(self, slave_addr, output_address, output_value):
+        print("write_single__coils")
         modbus_pdu = functions.write_single_coil(output_address, output_value)
 
-        resp_data = self._send_receive(modbus_pdu, slave_addr, False)
+        resp_data = await self._send_receive(modbus_pdu, slave_addr, False)
         operation_status = functions.validate_resp_data(resp_data, Const.WRITE_SINGLE_COIL,
                                                         output_address, value=output_value, signed=False)
 
+        print("operation_status:", operation_status)
         return operation_status
 
-    def write_single_register(self, slave_addr, register_address, register_value, signed=True):
+    async def write_single_register(self, slave_addr, register_address, register_value, signed=True):
         modbus_pdu = functions.write_single_register(register_address, register_value, signed)
 
-        resp_data = self._send_receive(modbus_pdu, slave_addr, False)
+        resp_data = await self._send_receive(modbus_pdu, slave_addr, False)
         operation_status = functions.validate_resp_data(resp_data, Const.WRITE_SINGLE_REGISTER,
                                                         register_address, value=register_value, signed=signed)
 
         return operation_status
 
-    def write_multiple_coils(self, slave_addr, starting_address, output_values):
+    async def write_multiple_coils(self, slave_addr, starting_address, output_values):
         modbus_pdu = functions.write_multiple_coils(starting_address, output_values)
 
-        resp_data = self._send_receive(modbus_pdu, slave_addr, False)
+        resp_data = await self._send_receive(modbus_pdu, slave_addr, False)
         operation_status = functions.validate_resp_data(resp_data, Const.WRITE_MULTIPLE_COILS,
                                                         starting_address, quantity=len(output_values))
 
         return operation_status
 
-    def write_multiple_registers(self, slave_addr, starting_address, register_values, signed=True):
+    async def write_multiple_registers(self, slave_addr, starting_address, register_values, signed=True):
         modbus_pdu = functions.write_multiple_registers(starting_address, register_values, signed)
 
-        resp_data = self._send_receive(modbus_pdu, slave_addr, False)
+        resp_data = await self._send_receive(modbus_pdu, slave_addr, False)
         operation_status = functions.validate_resp_data(resp_data, Const.WRITE_MULTIPLE_REGISTERS,
                                                         starting_address, quantity=len(register_values))
 
         return operation_status
-
-    def send_response(self, slave_addr, function_code, request_register_addr, request_register_qty, request_data, values=None, signed=True):
-        modbus_pdu = functions.response(function_code, request_register_addr, request_register_qty, request_data, values, signed)
-        self._send(modbus_pdu, slave_addr)
-
-    def send_exception_response(self, slave_addr, function_code, exception_code):
-        modbus_pdu = functions.exception_response(function_code, exception_code)
-        self._send(modbus_pdu, slave_addr)
-
-    def get_request(self, unit_addr_list, timeout=None):
-        req = self._uart_read_frame(timeout)
-
-        if len(req) < 8:
-            return None
-
-        if req[0] not in unit_addr_list:
-            return None
-
-        req_crc = req[-Const.CRC_LENGTH:]
-        req_no_crc = req[:-Const.CRC_LENGTH]
-        expected_crc = self._calculate_crc16(req_no_crc)
-        if (req_crc[0] != expected_crc[0]) or (req_crc[1] != expected_crc[1]):
-            return None
-
-        try:
-            request = Request(self, req_no_crc)
-        except ModbusException as e:
-            self.send_exception_response(req[0], e.function_code, e.exception_code)
-            return None
-
-        return request

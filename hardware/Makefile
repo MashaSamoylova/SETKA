@@ -42,7 +42,9 @@ without_compress:
 	cp ./makhina/control.py ./_build/makhina/control.py
 	cp -R ./uModbus ./_build/
 	cp mainconfig.py ./_build
-	cp -r ./_build/* /media/${USER}/ARIGATO
+	cp pc.py ./_build
+	cp server.py ./_build
+	cp -r ./_build/* /media/roman/ARIGATO
 
 clean:
 	rm -r _build
