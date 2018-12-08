@@ -2,6 +2,7 @@ import sys
 import pathlib
 import os
 import threading
+import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
@@ -12,7 +13,7 @@ from editordialog import Ui_EditorDialog
 from connectdialog import Ui_Dialog as Ui_ConnectDialog
 from pyboard import PyBoard
 
-import time
+from utils import to_float
 
 pyboard = PyBoard()
 
@@ -145,6 +146,8 @@ class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
         self.e4_edit.setText(speeds[3])
 
     def on_save_finished(self, status):
+        self.open_button.setEnabled(True)
+        self.save_button.setEnabled(True)
         self.warn('Конфиг сохранен!')
 
     def wait_for_save(self):
@@ -154,20 +157,28 @@ class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
 
     def on_save(self):
         try:
-            speeds = [str(float(self.e1_edit.text())).zfill(5), str(float(self.e2_edit.text())).zfill(5),
-                      str(float(self.e3_edit.text())).zfill(5), str(float(self.e4_edit.text())).zfill(5)]
+            speeds = list(map(lambda x: to_float(x.text()), [self.e1_edit, 
+                                                            self.e2_edit,
+                                                            self.e3_edit,
+                                                            self.e4_edit]))
+            print('Speeds are', speeds)
         except:
             QtWidgets.QMessageBox.warning(self, "Ошибка", "Некорректный формат!")
         else:
+            self.open_button.setEnabled(False)
+            self.save_button.setEnabled(False)
             self.warn('Загружаем в PyBoard')
             pyboard.config_value = [x for i in speeds for x in i]
-            pyboard.arg = int(self.choosen_file()) + 1
+            print('Config value is ', pyboard.config_value)
+            pyboard.arg = int(self.choosen_file())
             pyboard.cmd = 4
             save_thread = threading.Thread(target=self.wait_for_save)
             save_thread.daemon = True
             save_thread.start()
 
     def on_load_finished(self, status):
+        self.open_button.setEnabled(True)
+        self.save_button.setEnabled(True)
         self.fill_speeds(self.speeds)
         self.warn('Конфиг получен!')
 
@@ -179,7 +190,10 @@ class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
         self.load_finished_signal.emit(1)
 
     def on_load(self):
-        pyboard.arg = int(self.choosen_file()) + 1
+        self.open_button.setEnabled(False)
+        self.save_button.setEnabled(False)
+        pyboard.arg = int(self.choosen_file())
+        print('ARG IS ', pyboard.arg)
         pyboard.cmd = 3
         self.warn('Получаем конфиг с PyBoard')
         load_thread = threading.Thread(target=self.wait_for_load)

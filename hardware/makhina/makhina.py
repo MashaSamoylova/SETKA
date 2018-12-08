@@ -4,11 +4,12 @@ from mainconfig import extruder_pulse_pin, first_head_pulse_pin,\
                        second_head_pulse_pin, reciever_pulse_pin,\
                        motors_enable_pin, reciever_enable_pin
 from makhina.motor import Motor
+import random
 
 class Makhina:
 
     # Work in progress
-    wip = True
+    wip = False
 
     def __init__(self):
         self.extrudo_engine = Motor(Timer(2), Pin(extruder_pulse_pin, Pin.OUT), 5000, 3)
@@ -47,7 +48,7 @@ class Owen:
     async def read_owen_data(self):
         if not self.control.makhina.wip:
             return
-        try:
+        """try:
             new_data = await self.server.connection.read_holding_registers(owen_addres, 0, 48)
         except Exception as e:
             print(e, 'OWEN is broken')
@@ -55,5 +56,6 @@ class Owen:
             print(new_data)
             new_data = [new_data[pin * 6 + 1] for pin in owen_pins]
             print(new_data)
-            t1, t2, p1, p2, *_ = new_data
-            self.control.log_new_data(new_data)
+        """
+        new_data = [random.randint(0, 100) for _ in range(4)]
+        self.control.log_new_data(new_data)

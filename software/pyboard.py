@@ -20,7 +20,7 @@ class PyBoard():
     second_head_speed = ['' for i in range(5)]
     reciever_speed = ['' for i in range(5)]
     config = ['' for i in range(5)]
-    config_value = ['' for i in range(20)]
+    config_value = list('000.0' * 4)
     t1 = list("000.0")
     t2 = list("000.0")
     p1 = list("000.0")
@@ -41,24 +41,20 @@ class PyBoard():
         self.server.route_map.add_rule(self.on_write_single_reg, [5], [6], list(range(256)))
 
     def on_read_reg(self, slave_id, function_code, address):
-        print('address', address)
         if address == 2:
             return self.cmd
         if address == 3:
             return self.arg
         if address in list(range(50, 70)):
-            return ord(self.config_value[address % 20])
+            return ord(self.config_value[address - 50])
 
     def on_write_single_reg(self, slave_id, function_code, address, value):
-        print(address, value)
         if address == 2:
             self.cmd = value
         if address == 3:
             self.arg = value
-        print('write_single_reg finished')
 
     def on_write_reg(self, slave_id, function_code, address, value):
-        print(address, chr(value))
         if address in list(range(5, 10)):
             self.extruder_speed[address % 5] = chr(value)
         if address in list(range(10, 15)):
@@ -78,7 +74,7 @@ class PyBoard():
         if address in list(range(45, 50)):
             self.p2[address % 5] = chr(value)
         if address in list(range(50, 70)):
-            self.config_value[address % 20] = chr(value)
+            self.config_value[address - 50] = chr(value)
 
     def connect(self, port, callback):
         try:

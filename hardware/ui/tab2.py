@@ -1,6 +1,6 @@
 from ui.views import Button, Label
-from ui.utils import colors
-from pyb import Timer
+from ui.utils import colors, to_float
+import uasyncio as asyncio
 
 class Tab2:
     """Second tab, consists of 4 Labels of temperature and pressuare"""
@@ -8,21 +8,23 @@ class Tab2:
     is_draw = False
 
     def __init__(self, lcd, control):
+        self.control = control
         self.strings = [Label(lcd, 45, 30 + i * 25, "000.0",
                               fg=colors['green' if i // 2 else 'red']) for i in range(4)]
-        self.update_timer = Timer(5)
-        self.update_timer.callback(lambda t: self.on_tick())
-        self.update_timer.init(freq=1)
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.on_tick())
 
-    def on_tick(self):
-        if self.is_draw and self.control.makhina.wip:
-            self.update_data()
+    async def on_tick(self):
+        while True:
+            if self.is_draw and self.control.makhina.wip:
+                self.update_data()
+            await asyncio.sleep_ms(1000)
 
     def update_data(self):
-        self.strings[0].text = control.t1
-        self.strings[1].text = control.t2
-        self.strings[2].text = control.p1
-        self.strings[3].text = control.p2
+        self.strings[0].text = to_float(self.control.t1)
+        self.strings[1].text = to_float(self.control.t2)
+        self.strings[2].text = to_float(self.control.p1)
+        self.strings[3].text = to_float(self.control.p2)
         for string in self.strings:
             string.draw()
 

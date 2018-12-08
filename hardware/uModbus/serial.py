@@ -123,12 +123,9 @@ class Serial:
         return status_pdu
 
     async def read_holding_registers(self, slave_addr, starting_addr, register_qty, signed=True):
-        print("read_holding_registers")
-        print(starting_addr)
         modbus_pdu = functions.read_holding_registers(starting_addr, register_qty)
 
         resp_data = await self._send_receive(modbus_pdu, slave_addr, True)
-        print(resp_data)
         register_value = self._to_short(resp_data, signed)
 
         return register_value
@@ -142,14 +139,12 @@ class Serial:
         return register_value
 
     async def write_single_coil(self, slave_addr, output_address, output_value):
-        print("write_single__coils")
         modbus_pdu = functions.write_single_coil(output_address, output_value)
 
         resp_data = await self._send_receive(modbus_pdu, slave_addr, False)
         operation_status = functions.validate_resp_data(resp_data, Const.WRITE_SINGLE_COIL,
                                                         output_address, value=output_value, signed=False)
 
-        print("operation_status:", operation_status)
         return operation_status
 
     async def write_single_register(self, slave_addr, register_address, register_value, signed=True):
