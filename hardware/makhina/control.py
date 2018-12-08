@@ -139,17 +139,23 @@ class MakhinaControl:
 # HOT MELT
 ###########################################
     def hot_melt_check(self):
-        if float(self.t1) > max_temperature or float(self.t2) > max_temperature:
+        print("NOTIFY", self.hot_melt_error.notify_client)
+        if (float(self.t1) > max_temperature or float(self.t2) > max_temperature) and not self.hot_melt_error.notify_client:
+            print("RETURN TRUE")
             return True
+        print("RETURN FALSE")
         return False
 
     def hot_melt_primary_handler(self):
         self.stop()
 
     def skip_hot_melt(self):
-        if float(self.t1) <=  max_temperature and float(self.t2) <= max_temperature and self.hot_melt_error.notify_client:
-            self.hot_melt_error.notify_client = False
+        print("[SKIP] NOTIFY", self.hot_melt_error.notify_client)
+        if (float(self.t1) <=  max_temperature and float(self.t2) <= max_temperature) or self.hot_melt_error.notify_client:
+            #self.hot_melt_error.notify_client = False
+            print("SKIP TRUE")
             return True
+        print("SKIP FALSE")
         return False
 
 ###########################################
@@ -181,7 +187,7 @@ class MakhinaControl:
         pass
 
     def skip_low_raw_material(self):
-        if machine.Pin(level_material_pin, machine.Pin.In, machine.Pin.PULL_UP).value() or self.low_raw_material_error.notify_client:
+        if machine.Pin(level_material_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() or self.low_raw_material_error.notify_client:
             return True
         return False
 
@@ -189,7 +195,7 @@ class MakhinaControl:
 # BREAK ARM
 ############################################
     def break_arm_check(self):
-        if not machine.Pin(break_arm_pin, machine.Pin.In, machine.Pin.PULL_UP).value() and not self.break_arm_error.notify_client:
+        if not machine.Pin(break_arm_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() and not self.break_arm_error.notify_client:
             return True
         return False
 
@@ -197,7 +203,7 @@ class MakhinaControl:
         pass
 
     def skip_break_arm(self):
-        if machine.Pin(break_arm_pin, machine.Pin.In, machine.Pin.PULL_UP).value() or self.break_arm_error.notify_client:
+        if machine.Pin(break_arm_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() or self.break_arm_error.notify_client:
             return True
         return False
 
@@ -225,7 +231,7 @@ class MakhinaControl:
 # EMERGENCY STOP
 #############################################
     def emergency_stop_check(self):
-        if not machine.Pin(emergency_stop_pin, machine.Pin.In, machine.Pin.PULL_UP).value():
+        if not machine.Pin(emergency_stop_pin, machine.Pin.IN, machine.Pin.PULL_UP).value():
             return True
         return False
 
@@ -233,7 +239,7 @@ class MakhinaControl:
         pass
 
     def skip_emergency_stop(self):
-        if machine.Pin(emergency_stop_pin, machine.Pin.In, machine.Pin.PULL_UP).value() and self.emergency_stop_error.notify_client:
+        if machine.Pin(emergency_stop_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() and self.emergency_stop_error.notify_client:
             return True
         return False
 
@@ -263,5 +269,5 @@ class Error():
     active = False
     notify_client = False
 
-def __init__(self, code):
-    self.code = code
+    def __init__(self, code):
+        self.code = code

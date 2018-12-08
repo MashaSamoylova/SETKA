@@ -72,5 +72,6 @@ class Owen:
             new_data = [new_data[pin * 6 + 1] for pin in owen_pins]
             print(new_data)
         """
-        new_data = [random.randint(0, 100) for _ in range(4)]
+        new_data = [random.randint(0, 1000) for _ in range(4)]
         self.control.log_new_data(new_data)
+        await asyncio.sleep_ms(60 * 1000)
