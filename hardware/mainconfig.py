@@ -22,7 +22,7 @@ max_pressure = 100
 
 level_material_pin = "X3"
 break_arm_pin = "X7"
-mesh_thickness_uart = 1
+mesh_uart_number = 1
 max_mesh_thickness = 100
 
 emergency_stop_pin = "X8"

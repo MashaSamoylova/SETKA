@@ -2,7 +2,7 @@ from pyb import Pin, Timer, UART
 
 from mainconfig import extruder_pulse_pin, first_head_pulse_pin,\
                        second_head_pulse_pin, reciever_pulse_pin,\
-                       motors_enable_pin, reciever_enable_pin
+                       motors_enable_pin, reciever_enable_pin, mesh_uart_number
 from makhina.motor import Motor
 import random
 
@@ -32,7 +32,7 @@ class Makhina:
         self.mesh_thikness = 0
 
         loop = asyncio.get_event_loop()
-        loop.create_task(update_mesh())
+        loop.create_task(self.update_mesh())
     
     def start(self):
         self.wip = True
