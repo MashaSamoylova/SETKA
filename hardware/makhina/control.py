@@ -4,7 +4,9 @@ from pyb import RTC
 import uasyncio as asyncio
 
 from mainconfig import up_button_pin, down_button_pin,\
-                       right_button_pin, start_button_pin, stop_button_pin
+                       right_button_pin, start_button_pin, stop_button_pin,\
+                       max_temperature, max_pressure, level_material_pin, break_arm_pin,\
+                       max_mesh_thickness, emergency_stop_pin
 from makhina.makhina import Makhina
 from ui.utils import count_time_diff, zfill, chunkstring, to_float
 
@@ -40,6 +42,46 @@ class MakhinaControl:
         self.change_current_config('000')
         self.rtc = RTC()
         print("INIT SPEEDS")
+
+        self.hot_melt_error = Error(1)
+        self.hot_melt_error.check = self.hot_melt_check
+        self.hot_melt_error.primary_handler = self.hot_melt_primary_handler
+        self.hot_melt_error.skip = self.skip_hot_melt
+
+        self.high_pressure_error = Error(2)
+        self.high_pressure_error.check = self.high_pressure_check
+        self.high_pressure_error.primary_handler = self.high_pressure_primary_handler
+        self.high_pressure_error.skip = self.skip_high_pressure
+
+        self.low_raw_material_error = Error(3)
+        self.low_raw_material_error.check = self.low_raw_material_check
+        self.low_raw_material_error.primary_handler = self.low_raw_primary_handler
+        self.low_raw_material_error.skip = self.skip_low_raw_material
+
+        self.break_arm_error = Error(4)
+        self.break_arm_error.check = self.break_arm_check
+        self.break_arm_error.primary_handler = self.break_arm_primary_nandler
+        self.break_arm_error.skip = self.skip_break_arm
+
+        self.mesh_thickness_error = Error(5)
+        self.mesh_thickness_error.check = self.mesh_thickness_check
+        self.mesh_thickness_error.primary_handler = self.mesh_thickness_primary_handler
+        self.mesh_thickness_error.skip = self.skip_mesh_thickness
+
+        self.emergency_stop_error = Error(6)
+        self.emergency_stop_error.check = self.emergency_stop_check
+        self.emergency_stop_error.primary_handler = self.emergency_stop_primary_handler
+        self.emergency_stop_error.skip = self.skip_emergency_stop
+
+        self.errors = [
+                self.hot_melt_error,
+                self.high_pressure_error,
+                self.low_raw_material_error,
+                self.break_arm_error,
+                self.mesh_thickness_error,
+                self.emergency_stop_error,
+                ]
+
 
     def start_new_log(self):
         if self.log: self.log.close()
@@ -91,6 +133,117 @@ class MakhinaControl:
         self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed = chunkstring(speeds, 5)
         self.set_speeds((self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed))
 
+
+
+###########################################
+# HOT MELT
+###########################################
+    def hot_melt_check(self):
+        print("NOTIFY", self.hot_melt_error.notify_client)
+        if (float(self.t1) > max_temperature or float(self.t2) > max_temperature) and not self.hot_melt_error.notify_client:
+            print("RETURN TRUE")
+            return True
+        print("RETURN FALSE")
+        return False
+
+    def hot_melt_primary_handler(self):
+        self.stop()
+
+    def skip_hot_melt(self):
+        print("[SKIP] NOTIFY", self.hot_melt_error.notify_client)
+        if (float(self.t1) <=  max_temperature and float(self.t2) <= max_temperature) or self.hot_melt_error.notify_client:
+            #self.hot_melt_error.notify_client = False
+            print("SKIP TRUE")
+            return True
+        print("SKIP FALSE")
+        return False
+
+###########################################
+# HIGH PRESSURE
+###########################################
+    def high_pressure_check(self):
+        if float(self.p1) > max_pressure or float(self.p2) > max_pressure:
+            return True
+        return False
+
+    def high_pressure_primary_handler(self):
+        self.stop()
+
+    def skip_high_pressure(self):
+        if float(self.p1) <= max_pressure or float(self.p2) <= max_pressure and self.high_pressure_error.notify_client:
+            self.high_pressure_error.notify_client = False
+            return True
+        return False
+
+############################################
+# LOW RAW MATERIAL
+############################################
+    def low_raw_material_check(self):
+        if not machine.Pin(level_material_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() and not self.low_raw_material_error.notify_client:
+            return True
+        return False
+
+    def low_raw_primary_handler(self):
+        pass
+
+    def skip_low_raw_material(self):
+        if machine.Pin(level_material_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() or self.low_raw_material_error.notify_client:
+            return True
+        return False
+
+############################################
+# BREAK ARM
+############################################
+    def break_arm_check(self):
+        if not machine.Pin(break_arm_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() and not self.break_arm_error.notify_client:
+            return True
+        return False
+
+    def break_arm_primary_nandler(self):
+        pass
+
+    def skip_break_arm(self):
+        if machine.Pin(break_arm_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() or self.break_arm_error.notify_client:
+            return True
+        return False
+
+
+#############################################
+# MESH THICKNESS
+#############################################
+    def mesh_thickness_check(self):
+        mt = float(self.makhina.mesh_thikness)
+        if mt > max_mesh_thickness:
+            return True
+        return False
+
+    def mesh_thickness_primary_handler(self):
+        pass
+
+    def skip_mesh_thickness(self):
+        mt = float(self.makhina.mesh_thikness)
+        if mt <= max_mesh_thickness and self.mesh_thickness_error.notify_client:
+            self.mesh_thickness_error.notify_client = False
+            return True
+        return False
+
+#############################################
+# EMERGENCY STOP
+#############################################
+    def emergency_stop_check(self):
+        if not machine.Pin(emergency_stop_pin, machine.Pin.IN, machine.Pin.PULL_UP).value():
+            return True
+        return False
+
+    def emergency_stop_primary_handler(self):
+        pass
+
+    def skip_emergency_stop(self):
+        if machine.Pin(emergency_stop_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() and self.emergency_stop_error.notify_client:
+            return True
+        return False
+
+
 class AnalogButton:
 
     handler = lambda : 1
@@ -107,3 +260,14 @@ class AnalogButton:
             if self.enabled and not self.button.value():
                 self.handler()
                 await asyncio.sleep_ms(200)
+
+
+class Error():
+    primary_handler = lambda: 1
+    skip = lambda: 1
+    check = lambda: 1
+    active = False
+    notify_client = False
+
+    def __init__(self, code):
+        self.code = code

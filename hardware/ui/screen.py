@@ -13,6 +13,7 @@ class Screen:
 
     current_tab_number = 0
     status_error = False
+    current_error = -1
     error_msg = ""
 
     def __init__(self, lcd, makhina_control):
@@ -21,12 +22,19 @@ class Screen:
         self.tab_buttons[0].handler = lambda: 1
         self.tab_buttons[1].handler = lambda: 2
         self.tab_buttons[2].handler = lambda: 3
+        self.makhina_control = makhina_control
         print(gc.mem_free())
-        self.tabs = [Tab1(lcd, makhina_control), Tab2(lcd, makhina_control), Tab3(lcd, makhina_control)]
-        self.error_button = Button(lcd, 0, 135, 128, 15, "")
+        self.tab1 = Tab1(lcd, makhina_control)
+        self.tab2 = Tab2(lcd, makhina_control)
+        self.tab3 = Tab3(lcd, makhina_control)
+        self.tabs = [self.tab1, self.tab2, self.tab3]
+        self.error_button = Button(lcd, 0, 125, 128, 30, "")
         self.error_button.handler = self.notify_error
         loop = asyncio.get_event_loop()
         loop.create_task(self.handle_lcd_touch())
+        loop.create_task(self.check_errors())
+        loop.create_task(self.skip_errors())
+        loop.create_task(self.unset_notify_client())
 
     def draw(self):
         """Draw tab buttons, errors and current tab"""
@@ -65,10 +73,61 @@ class Screen:
         else:
             return self.tabs[self.current_tab_number].handle_touch(x, y)
 
+    async def check_errors(self):
+        while True:
+            for i in range(len(self.makhina_control.errors)):
+                if not self.makhina_control.errors[i].active and self.makhina_control.errors[i].check():
+                    self.makhina_control.errors[i].primary_handler()
+                    self.makhina_control.errors[i].active = True
+                    if self.current_error == -1:
+                        self.set_status_error(self.makhina_control.errors[i].code)
+                        self.draw()
+                        self.current_error = i
+                    print("[SCREEN] current_error", self.current_error)
+            await asyncio.sleep_ms(1000)
+
+    async def skip_errors(self):
+        while True:
+            for i in range(len(self.makhina_control.errors)):
+                if self.makhina_control.errors[i].skip() and self.makhina_control.errors[i].active:
+                    self.makhina_control.errors[i].active = False
+                    print("[SCREEN] NEW CURRENT ERROR BEFORE SKIP", self.current_error)
+                    self.current_error = self.get_next_error()
+                    print("[SCREEN] NEW CURRENT ERROR AFTER SKIP", self.current_error)
+                    if self.current_error == -1:
+                        self.error_button.clear()
+                        self.status_error = False
+                    else:
+                        self.set_status_error(self.makhina_control.errors[self.current_error].code)
+                    self.draw()
+            await asyncio.sleep_ms(1000)
+
+    async def unset_notify_client(self):
+        print("[SCREEN] unset notify error")
+        while True:
+            for e in self.makhina_control.errors:
+                e.notify_client = False
+            await asyncio.sleep_ms(1 * 10 * 1000)
+
+    def get_next_error(self):
+        for i in range(len(self.makhina_control.errors)):
+            if self.makhina_control.errors[i].active:
+                return i
+        return -1
+
+    def set_status_error(self, code):
+        self.tab1.edit_mode_off()
+        self.tab3.edit_mode_off()
+        self.status_error = True
+        self.error_button.text = str(code)
+
     def draw_error(self):
         self.error_button.draw(colors["black"], colors["red"])
 
     def notify_error(self):
         self.error_button.draw(colors["red"], colors["white"])
-        self.error_button.clear()
-        self.status_error = False
+        self.error_button.draw(colors["red"], colors["white"])
+        print("current_error", self.current_error)
+        self.makhina_control.errors[self.current_error].notify_client = True
+        print("[SCREEN] current errors notify_client", self.current_error, self.makhina_control.errors[self.current_error].notify_client)
+        return 1
