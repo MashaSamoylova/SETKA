@@ -1,10 +1,12 @@
-from pyb import Pin, Timer
+from pyb import Pin, Timer, UART
 
 from mainconfig import extruder_pulse_pin, first_head_pulse_pin,\
                        second_head_pulse_pin, reciever_pulse_pin,\
                        motors_enable_pin, reciever_enable_pin
 from makhina.motor import Motor
 import random
+
+import uasyncio as asyncio
 
 class Makhina:
 
@@ -25,6 +27,12 @@ class Makhina:
         self.enablePulseReceiver = Pin(reciever_enable_pin, Pin.OUT)
         self.enablePulse.low()
         self.enablePulseReceiver.low()
+
+        self.mesh_thikness_uart = UART(mesh_uart_number, 9600, timeout=200)
+        self.mesh_thikness = 0
+
+        loop = asyncio.get_event_loop()
+        loop.create_task(update_mesh())
     
     def start(self):
         self.wip = True
@@ -36,6 +44,13 @@ class Makhina:
         self.wip = False
         for engine in self.engines:
             engine.stop()
+
+    async def update_mesh(self):
+        if self.wip and self.mesh_thikness_uart.any():
+            self.mesh_thikness = self.mesh_thikness_uart.read()
+
+        await asyncio.sleep_ms(2000)
+
 
 owen_pins = [1, 2, 3, 4]
 owen_addres = 16

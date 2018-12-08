@@ -21,6 +21,7 @@ class Screen:
         self.tab_buttons[0].handler = lambda: 1
         self.tab_buttons[1].handler = lambda: 2
         self.tab_buttons[2].handler = lambda: 3
+        self.makhina_control = makhina_control
         print(gc.mem_free())
         self.tabs = [Tab1(lcd, makhina_control), Tab2(lcd, makhina_control), Tab3(lcd, makhina_control)]
         self.error_button = Button(lcd, 0, 135, 128, 15, "")
@@ -65,10 +66,42 @@ class Screen:
         else:
             return self.tabs[self.current_tab_number].handle_touch(x, y)
 
+    async def check_errors(self):
+        while True:
+            for i in range(len(self.makhina_control.errors)):
+                if not self.makhina_control.errors[i].active and self.makhina_control.errors[i].check():
+                    self.makhina_control.errors[i].primary_handler()
+                    self.makhina_control.errors[i].active = True
+                    self.current_error = i
+            await asyncio.sleep_ms(1000)
+
+    async def skip_errors(self):
+        while True:
+            for i in range(len(self.makhina_control.errors)):
+                if self.makhina_control.errors[i].skip() and self.makhina_control.errors[i].active:
+                    self.makhina_control.errors[i].active = False
+                    self.current_error = self.get_next_error()
+                    if self.current_error == -1:
+                        self.error_button.clear()
+                        self.status_error = False
+                        self.draw()
+                    else:
+                        self.set_status_error(self.makhina_control.errors[self.current_error].code)
+            await asyncio.sleep_ms(1000)
+
+    def get_next_error(self):
+        for i in range(len(self.errors)):
+            if self.makhina_control.errors[i].active:
+                return i
+        return -1
+
+    def set_status_error(self, code):
+        self.status_error = True
+        self.error_button.text = str(code)
+
     def draw_error(self):
         self.error_button.draw(colors["black"], colors["red"])
 
     def notify_error(self):
         self.error_button.draw(colors["red"], colors["white"])
-        self.error_button.clear()
         self.status_error = False

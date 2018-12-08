@@ -15,3 +15,14 @@ reciever_enable_pin = 'Y6'
 
 uart_pin = 6
 uart_ctrl_pin = 'Y4'
+
+
+max_temperature = 100
+max_pressure = 100
+
+level_material_pin = "X3"
+break_arm_pin = "X7"
+mesh_thickness_uart = 1
+max_mesh_thickness = 100
+
+emergency_stop_pin = "X8"
