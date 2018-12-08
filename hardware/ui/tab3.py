@@ -6,9 +6,6 @@ from ui.views import Button, EditableButton, Label
 from ui.utils import colors, zfill
 
 
-import gc
-
-
 class Tab3:
     """Third tab, includes:
         white editable string - config name
@@ -20,11 +17,11 @@ class Tab3:
     cur_button = 0
     
     def __init__(self, lcd, makhina_control):
+        self.mesh_thickness = Label(lcd, 45, 30, "56", fg=colors["blue"])
         self.config_string = EditableButton(lcd, 75, 50, 128, 17, makhina_control.config)
         self.time_string = EditableButton(lcd, 30, 80, 128, 17, "00:00:00")
         self.date_string = EditableButton(lcd, 5, 100, 128, 17, "00:00:00")
 
-        print(gc.mem_free())
         self.settings_buttons = [self.config_string, self.time_string, self.date_string]
         self.analog_buttons = [makhina_control.plus_button,
                                makhina_control.minus_button,

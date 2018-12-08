@@ -3,6 +3,7 @@ colors = {
     "white": (255, 255, 255),
     "red" : (232, 16, 16),
     "green" : (16, 232, 16)
+    "blue": (97, 124, 232),
 }
 
 def zfill(s, width):

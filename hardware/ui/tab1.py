@@ -9,6 +9,7 @@ class Tab1:
     cur_button = 0
     is_draw = False
     
+    
     def __init__(self, lcd, makhina_control):
         self.makhina_control = makhina_control
 

@@ -10,9 +10,7 @@ from mainconfig import lcd_pins
 from ui.screen import Screen
 from makhina.control import MakhinaControl
 
-
-hot_melt = 
-error_objects = []
+current_error = -1
 
 # set more detailed information on the exception
 micropython.alloc_emergency_exception_buf(100)
@@ -27,3 +25,5 @@ lcd.erase()
 # gui
 makhina_control = MakhinaControl()
 main_screen = Screen(lcd, makhina_control)
+
+loop = asyncio.get_event_loop()
