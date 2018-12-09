@@ -38,7 +38,6 @@ class Makhina:
         self.wip = True
         for engine in self.engines:
             engine.accel_status = True
-            engine.accel()
 
     def stop(self):
         self.wip = False
@@ -46,10 +45,11 @@ class Makhina:
             engine.stop()
 
     async def update_mesh(self):
-        if self.wip and self.mesh_thikness_uart.any():
-            self.mesh_thikness = self.mesh_thikness_uart.read()
+        while True:
+            if self.wip and self.mesh_thikness_uart.any():
+                self.mesh_thikness = self.mesh_thikness_uart.read()
 
-        await asyncio.sleep_ms(2000)
+            await asyncio.sleep_ms(2000)
 
 
 owen_pins = [1, 2, 3, 4]

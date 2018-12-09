@@ -47,6 +47,27 @@ class Computer:
             self.control.p2]))
         return res
 
+    async def send_logs_list(self):
+        if not os.listdir('/sd/logs'):
+            gen = (ord(x) for x in 'no')
+        else:
+            gen = (ord(x) for y in os.listdir('/sd/logs') for x in y if x != '.')
+        return await self.server.send_data(slave_addr, gen)
+
+    async def send_log(self):
+        log_name_raw = await self.server.get_string(slave_addr, 70, 10)
+        print(log_name_raw)
+        log_name = '.'.join(chunkstring(log_name_raw, 2))
+        print(log_name)
+        if log_name not in os.listdir('/sd/logs'):
+            print('NO LOG')
+            return
+        try:
+            return await self.server.send_file(slave_addr, log_name)
+        except Exception as e:
+            print(e)
+            return 0
+
     async def clear_command(self):
         await self.server.connection.write_single_register(slave_addr, 0x2, 0)
         #await self.server.connection.write_single_register(slave_addr, 0x3, 0)
@@ -67,7 +88,12 @@ class Computer:
                 res = await self.send_recipe(arg)
             if cmd == 4:
                 res = await self.get_save_recipe(arg)
-            if cmd: await self.clear_command()
+            if cmd == 5:
+                res = await self.send_logs_list()
+            if cmd == 6:
+                res = await self.send_log()
+            if cmd and cmd not in [5, 6]: await self.clear_command()
+            return res
 
     async def try_connect(self):
         try:

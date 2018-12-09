@@ -19,3 +19,14 @@ def count_time_diff(t1, t2):
 
 def chunkstring(string, length):
     return (string[i:length+i] for i in range(0, len(string), length))
+
+def file_iter(filename):
+    fd = open(filename)
+    buf = []
+    for i, line in enumerate(fd):
+        buf.append(line)
+        if not i % 10:
+            yield from (ord(x) for y in buf for x in y)
+            buf.clear()
+    if buf:
+        yield buf

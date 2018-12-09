@@ -32,9 +32,9 @@ class Screen:
         self.error_button.handler = self.notify_error
         loop = asyncio.get_event_loop()
         loop.create_task(self.handle_lcd_touch())
-        loop.create_task(self.check_errors())
-        loop.create_task(self.skip_errors())
-        loop.create_task(self.unset_notify_client())
+        #loop.create_task(self.check_errors())
+        #loop.create_task(self.skip_errors())
+        #loop.create_task(self.unset_notify_client())
 
     def draw(self):
         """Draw tab buttons, errors and current tab"""
@@ -84,7 +84,8 @@ class Screen:
                         self.draw()
                         self.current_error = i
                     print("[SCREEN] current_error", self.current_error)
-            await asyncio.sleep_ms(1000)
+                await asyncio.sleep_ms(100)
+            await asyncio.sleep_ms(300)
 
     async def skip_errors(self):
         while True:
@@ -100,7 +101,8 @@ class Screen:
                     else:
                         self.set_status_error(self.makhina_control.errors[self.current_error].code)
                     self.draw()
-            await asyncio.sleep_ms(1000)
+                await asyncio.sleep_ms(100)
+            await asyncio.sleep_ms(300)
 
     async def unset_notify_client(self):
         print("[SCREEN] unset notify error")

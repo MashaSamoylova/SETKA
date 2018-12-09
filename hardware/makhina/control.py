@@ -133,8 +133,6 @@ class MakhinaControl:
         self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed = chunkstring(speeds, 5)
         self.set_speeds((self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed))
 
-
-
 ###########################################
 # HOT MELT
 ###########################################

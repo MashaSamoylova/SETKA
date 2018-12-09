@@ -7,15 +7,17 @@ import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure 
-from mainwindow import Ui_MainWindow
-from settings import Ui_Dialog
-from editordialog import Ui_EditorDialog
-from connectdialog import Ui_Dialog as Ui_ConnectDialog
-from pyboard import PyBoard
 
-from utils import to_float
+from windows.mainwindow import Ui_MainWindow
+from windows.settings import Ui_Dialog
+from windows.editordialog import Ui_EditorDialog
+from windows.connectdialog import Ui_Dialog as Ui_ConnectDialog
+from windows.graphicsdialog import Ui_GraphicsDialog
+from pyboard import PyBoard
+from utils import to_float, chunkstring
 
 pyboard = PyBoard()
+
 
 class MatplotlibWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -78,28 +80,12 @@ class SETKAapp(Ui_MainWindow):
             dlg.exec_()
 
     def on_build_graph(self):
-        graph_file = QtWidgets.QFileDialog.getOpenFileName(directory=self.board_dir,
-                                                           filter="(*.data)")[0]
-        if not graph_file: return
-        try:
-            with open(graph_file) as f:
-                data = [x.strip().split(';') for x in f.readlines()]
-
-            temp1 = [int(x[0]) for x in data] 
-            temp2 = [int(x[1]) for x in data] 
-            press1 = [int(x[2]) for x in data] 
-            press2 = [int(x[3]) for x in data]
-        except:
-            QtWidgets.QMessageBox.warning(self.MainWindow, "Ошибка", "Некорректный формат файла!")
+        if not pyboard.connected:
+            QtWidgets.QMessageBox.warning(self.MainWindow, "Ошибка",
+                                "PyBoard не подключен, используйте Меню->Покдлючить PyBoard")
         else:
-            self.temp_graph.axis.plot(temp1, 'C1', label='T1')
-            self.temp_graph.axis.plot(temp2, 'C3', label='T2')
-            self.temp_graph.axis.legend()
-            self.press_graph.axis.plot(press1, 'C4', label='P1')
-            self.press_graph.axis.plot(press2, 'C2', label='P2')
-            self.press_graph.axis.legend()
-            self.temp_graph.canvas.draw()
-            self.press_graph.canvas.draw()
+            dlg = GraphicsDialog()
+            dlg.exec_()
         
     def on_open_editor(self):
         if not pyboard.connected:
@@ -118,6 +104,97 @@ class SETKAapp(Ui_MainWindow):
         self.MainWindow.show()
         sys.exit(self.app.exec_())
 
+
+class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
+
+    fetching_list = False
+    downloading = False
+    fetch_finished_signal = QtCore.pyqtSignal(int, name='fetch_finished_signal')
+    load_finished_signal = QtCore.pyqtSignal(int, name='load_finished_signal')
+
+    def __init__(self, parent=None):
+        QtWidgets.QDialog.__init__(self, parent)
+        self.setupUi(self)
+        self.open_butt.setEnabled(False)
+        self.open_butt.clicked.connect(self.on_open)
+        self.fetch_finished_signal.connect(self.on_finish_fetching)
+        self.load_finished_signal.connect(self.on_file_downloaded)
+        self.start_fetching()
+
+    def start_fetching(self):
+        self.update_status('Получаем список файлов...')
+        self.fetching_list = True
+        fetch_thread = threading.Thread(target=self.fetch)
+        fetch_thread.daemon = True
+        fetch_thread.start()
+
+    def fetch(self):
+        pyboard.recieve_logs_list()
+        while pyboard.recieve_flag != -1:
+            time.sleep(0.05)
+        self.fetch_finished_signal.emit(1)
+
+    def on_finish_fetching(self):
+        self.update_status('Выберите файл')
+        files_raw = ''.join([chr(x) for x in pyboard.recieved_file])
+        files = ['.'.join(chunkstring(x, 2)) for x in chunkstring(files_raw, 10)]
+        print(files)
+        for filename in files:
+            self.files_list.addItem(filename)
+        self.open_butt.setEnabled(True)
+        self.fetching_list = False
+
+    def cancel_downloading(self):
+        if self.fetching_list:
+            self.fetching_list = False
+        if self.downloading:
+            self.downloading = False
+
+    def closeEvent(self, evnt):
+        if self.fetching_list or self.downloading:
+            self.cancel_downloading()
+        super(GraphicsDialog, self).closeEvent(evnt)
+
+    def update_status(self, status):
+        self.status_label.setText(status)
+
+    def on_open(self):
+        selected = self.files_list.currentItem()
+        if not selected:
+            QtWidgets.QMessageBox.warning(self, "Ошибка", "Выберите файл!")
+            return
+        filename = selected.text()
+        print(filename)
+        self.open_butt.setEnabled(False)
+        save_thread = threading.Thread(target=self.download_file, args=(filename,))
+        save_thread.daemon = True
+        save_thread.start()
+
+    def download_file(self, filename):
+        pyboard.download_log(filename)
+        while pyboard.recieve_flag != -1:
+            time.sleep(0.05)
+        self.load_finished_signal.emit(1)
+
+    def on_file_downloaded(self):
+        file_raw = ''.join([chr(x) for x in pyboard.recieved_file])
+        self.open_butt.setEnabled(True)
+        data = [list(chunkstring(x, 5)) for x in file_raw.split('\n') if len(x) == 20]
+        print(data)
+        temp1 = [float(x[0]) for x in data] 
+        temp2 = [float(x[1]) for x in data] 
+        press1 = [float(x[2]) for x in data] 
+        press2 = [float(x[3]) for x in data]
+        app.temp_graph.axis.clear()
+        app.press_graph.axis.clear()
+        app.temp_graph.axis.plot(temp1, 'C1', label='T1')
+        app.temp_graph.axis.plot(temp2, 'C3', label='T2')
+        app.temp_graph.axis.legend()
+        app.press_graph.axis.plot(press1, 'C4', label='P1')
+        app.press_graph.axis.plot(press2, 'C2', label='P2')
+        app.press_graph.axis.legend()
+        app.temp_graph.canvas.draw()
+        app.press_graph.canvas.draw()
 
 class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
 
@@ -157,10 +234,10 @@ class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
 
     def on_save(self):
         try:
-            speeds = list(map(lambda x: to_float(x.text()), [self.e1_edit, 
-                                                            self.e2_edit,
-                                                            self.e3_edit,
-                                                            self.e4_edit]))
+            speeds = [to_float(x.text()) for x in [self.e1_edit, 
+                                                   self.e2_edit,
+                                                   self.e3_edit,
+                                                   self.e4_edit]]
             print('Speeds are', speeds)
         except:
             QtWidgets.QMessageBox.warning(self, "Ошибка", "Некорректный формат!")
