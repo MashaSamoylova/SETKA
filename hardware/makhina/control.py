@@ -138,22 +138,17 @@ class MakhinaControl:
 ###########################################
     def hot_melt_check(self):
         print("NOTIFY", self.hot_melt_error.notify_client)
-        if (float(self.t1) > max_temperature or float(self.t2) > max_temperature) and not self.hot_melt_error.notify_client:
-            print("RETURN TRUE")
+        if (float(self.t1) > max_temperature or float(self.t2) > max_temperature):
             return True
-        print("RETURN FALSE")
         return False
 
     def hot_melt_primary_handler(self):
         self.stop()
 
     def skip_hot_melt(self):
-        print("[SKIP] NOTIFY", self.hot_melt_error.notify_client)
-        if (float(self.t1) <=  max_temperature and float(self.t2) <= max_temperature) or self.hot_melt_error.notify_client:
-            #self.hot_melt_error.notify_client = False
-            print("SKIP TRUE")
+        if (float(self.t1) <=  max_temperature and float(self.t2) <= max_temperature):
+            self.hot_melt_error.notify_client = False
             return True
-        print("SKIP FALSE")
         return False
 
 ###########################################

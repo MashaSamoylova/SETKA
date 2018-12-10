@@ -14,8 +14,8 @@ class Makhina:
     wip = False
 
     def __init__(self):
-        self.extrudo_engine = Motor(Timer(2), Pin(extruder_pulse_pin, Pin.OUT), 5000, 3)
-        self.first_head_engine = Motor(Timer(3), Pin(first_head_pulse_pin, Pin.OUT), 18000, 4)
+        self.extrudo_engine = Motor(Timer(10), Pin(extruder_pulse_pin, Pin.OUT), 5000, 1)
+        self.first_head_engine = Motor(Timer(8), Pin(first_head_pulse_pin, Pin.OUT), 18000, 3)
         self.second_head_engine = Motor(Timer(1), Pin(second_head_pulse_pin, Pin.OUT), 18000, 1)
         self.reciever_engine = Motor(Timer(4), Pin(reciever_pulse_pin, Pin.OUT), 3200, 1)
 
@@ -25,8 +25,8 @@ class Makhina:
         # Подаем питание на шаговики
         self.enablePulse = Pin(motors_enable_pin, Pin.OUT)
         self.enablePulseReceiver = Pin(reciever_enable_pin, Pin.OUT)
-        self.enablePulse.low()
-        self.enablePulseReceiver.low()
+        self.enablePulse.value(1)
+        self.enablePulseReceiver.value(1)
 
         self.mesh_thikness_uart = UART(mesh_uart_number, 9600, timeout=200)
         self.mesh_thikness = 0
@@ -36,11 +36,15 @@ class Makhina:
     
     def start(self):
         self.wip = True
+        self.enablePulse.value(0)
+        self.enablePulseReceiver.value(0)
         for engine in self.engines:
             engine.accel_status = True
 
     def stop(self):
         self.wip = False
+        self.enablePulse.value(1)
+        self.enablePulseReceiver.value(1)
         for engine in self.engines:
             engine.stop()
 

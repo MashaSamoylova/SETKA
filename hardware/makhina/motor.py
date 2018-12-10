@@ -34,35 +34,33 @@ class Motor:
         print("current: ", self.__gz_current)
         if not self.__gz_current and self.__gz_new > self.__gz_current:
             print("ускорение")
- #           self.timer.init(freq=1)
-#            ch = self.timer.channel(self.channel, pyb.Timer.PWM, pin=self.pin, pulse_width=self.impulse_width)
+            self.timer.init(freq=1)
+            ch = self.timer.channel(self.channel, pyb.Timer.PWM, pin=self.pin, pulse_width=self.impulse_width)
         
         if self.__gz_new > self.__gz_current:
             diff = int(math.sqrt(self.__gz_new - self.__gz_current))
             self.__gz_current = self.__gz_current + int(diff)
-  #          self.timer.freq(self.__gz_current)
+            self.timer.freq(self.__gz_current)
         else:
             self.__gz_current = self.__gz_new
-            self.accel_status = False
 
         if not self.__gz_current:
-            pass
-   #         self.timer.deinit()
+            self.timer.deinit()
         else:
-            pass
-    #        self.timer.freq(self.__gz_current)
+            self.timer.freq(self.__gz_current)
 
     async def run(self):
         while True:
             # accelfunction sets accel_status in False when __gz_current = __qz_new
             if self.accel_status:
                 self.accel()
-            await asyncio.sleep_ms(500)
+            await asyncio.sleep_ms(1000)
 
     
     def stop(self):
-        print("stop")
         self.__gz_current = 0
         print("stop:", self.__gz_new)
         print("stop:", self.__gz_current)
-     #   self.timer.deinit()
+        self.timer.deinit()
+        self.accel_status = False
+
