@@ -18,15 +18,17 @@ from utils import to_float, chunkstring
 
 pyboard = PyBoard()
 
-
 class MatplotlibWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.figure = Figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
+        self.canvas.setMinimumSize(QtCore.QSize(1500, 0))
 
         self.axis = self.figure.add_subplot(111)
+        self.axis.set_xlim(0, 900)
+        self.axis.set_ylim(0, 200)
 
         self.layoutVertical = QtWidgets.QVBoxLayout(self)
         self.layoutVertical.addWidget(self.canvas)
@@ -41,8 +43,10 @@ class SETKAapp(Ui_MainWindow):
         self.setupUi(self.MainWindow)
         self.temp_graph = MatplotlibWidget(self.MainWindow)
         self.press_graph = MatplotlibWidget(self.MainWindow)
-        self.graphs_layout.addWidget(self.temp_graph)
-        self.graphs_layout.addWidget(self.press_graph)
+        self.temp_scroll.setWidget(self.temp_graph)
+        self.press_scroll.setWidget(self.press_graph)
+        #import random
+        #self.plot_graphics([[random.randint(0, 100) for _ in range(4)] for i in range(900)])
         self.connect_slots()
         self.datetime = QtCore.QDateTime.currentDateTime()
         timer = QtCore.QTimer(self.app)
@@ -103,6 +107,22 @@ class SETKAapp(Ui_MainWindow):
     def run(self):
         self.MainWindow.show()
         sys.exit(self.app.exec_())
+
+    def plot_graphics(self, data):
+        temp1 = [float(x[0]) for x in data] 
+        temp2 = [float(x[1]) for x in data] 
+        press1 = [float(x[2]) for x in data] 
+        press2 = [float(x[3]) for x in data]
+        self.temp_graph.axis.clear()
+        self.press_graph.axis.clear()
+        self.temp_graph.axis.plot(list(range(len(temp1))), temp1, 'C1', label='T1')
+        self.temp_graph.axis.plot(list(range(len(temp2))), temp2, 'C3', label='T2')
+        self.temp_graph.axis.legend()
+        self.press_graph.axis.plot(list(range(len(press1))), press1, 'C4', label='P1')
+        self.press_graph.axis.plot(list(range(len(press2))), press2, 'C2', label='P2')
+        self.press_graph.axis.legend()
+        self.temp_graph.canvas.draw()
+        self.press_graph.canvas.draw()
 
 
 class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
@@ -181,20 +201,7 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
         self.open_butt.setEnabled(True)
         data = [list(chunkstring(x, 5)) for x in file_raw.split('\n') if len(x) == 20]
         print(data)
-        temp1 = [float(x[0]) for x in data] 
-        temp2 = [float(x[1]) for x in data] 
-        press1 = [float(x[2]) for x in data] 
-        press2 = [float(x[3]) for x in data]
-        app.temp_graph.axis.clear()
-        app.press_graph.axis.clear()
-        app.temp_graph.axis.plot(temp1, 'C1', label='T1')
-        app.temp_graph.axis.plot(temp2, 'C3', label='T2')
-        app.temp_graph.axis.legend()
-        app.press_graph.axis.plot(press1, 'C4', label='P1')
-        app.press_graph.axis.plot(press2, 'C2', label='P2')
-        app.press_graph.axis.legend()
-        app.temp_graph.canvas.draw()
-        app.press_graph.canvas.draw()
+        app.plot_graphics(data)
 
 class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
 
