@@ -5,8 +5,9 @@ import threading
 import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.figure import Figure 
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
+from matplotlib.ticker import FuncFormatter
 
 from windows.mainwindow import Ui_MainWindow
 from windows.settings import Ui_Dialog
@@ -27,7 +28,6 @@ class MatplotlibWidget(QtWidgets.QWidget):
         self.canvas.setMinimumSize(QtCore.QSize(1500, 0))
 
         self.axis = self.figure.add_subplot(111)
-        self.axis.set_xlim(0, 900)
         self.axis.set_ylim(0, 200)
 
         self.layoutVertical = QtWidgets.QVBoxLayout(self)
@@ -46,7 +46,12 @@ class SETKAapp(Ui_MainWindow):
         self.temp_scroll.setWidget(self.temp_graph)
         self.press_scroll.setWidget(self.press_graph)
         #import random
-        #self.plot_graphics([[random.randint(0, 100) for _ in range(4)] for i in range(900)])
+        #r_data = []
+        #cur_time = 0
+        #for i in range(900):
+        #    r_data.append([str(cur_time).zfill(4)] + [random.randint(0, 100) for _ in range(4)])
+        #    cur_time += random.randint(1, 3)
+        #self.plot_graphics(r_data)
         self.connect_slots()
         self.datetime = QtCore.QDateTime.currentDateTime()
         timer = QtCore.QTimer(self.app)
@@ -92,12 +97,12 @@ class SETKAapp(Ui_MainWindow):
             dlg.exec_()
         
     def on_open_editor(self):
-        if not pyboard.connected:
+        """if not pyboard.connected:
             QtWidgets.QMessageBox.warning(self.MainWindow, "Ошибка",
                                 "PyBoard не подключен, используйте Меню->Покдлючить PyBoard")
-        else:
-            dlg = EditorDialog()
-            dlg.exec_()
+        else:"""
+        dlg = EditorDialog()
+        dlg.exec_()
 
     def on_open_settings(self):
         dlg = SettingsDialog()
@@ -109,17 +114,21 @@ class SETKAapp(Ui_MainWindow):
         sys.exit(self.app.exec_())
 
     def plot_graphics(self, data):
-        temp1 = [float(x[0]) for x in data] 
-        temp2 = [float(x[1]) for x in data] 
-        press1 = [float(x[2]) for x in data] 
-        press2 = [float(x[3]) for x in data]
+        ticks = [':'.join(chunkstring(x[0], 2)) for x in data]
+        int_time = [int(x[0]) for x in data]
+        temp1 = [float(x[1]) for x in data] 
+        temp2 = [float(x[2]) for x in data] 
+        press1 = [float(x[3]) for x in data] 
+        press2 = [float(x[4]) for x in data]
         self.temp_graph.axis.clear()
         self.press_graph.axis.clear()
-        self.temp_graph.axis.plot(list(range(len(temp1))), temp1, 'C1', label='T1')
-        self.temp_graph.axis.plot(list(range(len(temp2))), temp2, 'C3', label='T2')
+        for axis in [self.temp_graph.axis, self.press_graph.axis]:
+            axis.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: ticks[pos]))
+        self.temp_graph.axis.plot(int_time, temp1, 'C1', label='T1')
+        self.temp_graph.axis.plot(int_time, temp2, 'C3', label='T2')
         self.temp_graph.axis.legend()
-        self.press_graph.axis.plot(list(range(len(press1))), press1, 'C4', label='P1')
-        self.press_graph.axis.plot(list(range(len(press2))), press2, 'C2', label='P2')
+        self.press_graph.axis.plot(int_time, press1, 'C4', label='P1')
+        self.press_graph.axis.plot(int_time, press2, 'C2', label='P2')
         self.press_graph.axis.legend()
         self.temp_graph.canvas.draw()
         self.press_graph.canvas.draw()
@@ -157,10 +166,11 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
     def on_finish_fetching(self):
         self.update_status('Выберите файл')
         files_raw = ''.join([chr(x) for x in pyboard.recieved_file])
-        files = ['.'.join(chunkstring(x, 2)) for x in chunkstring(files_raw, 10)]
-        print(files)
-        for filename in files:
-            self.files_list.addItem(filename)
+        if files_raw != 'no':
+            files = ['.'.join(chunkstring(x, 2)) for x in chunkstring(files_raw, 10)]
+            print(files)
+            for filename in files:
+                self.files_list.addItem(filename)
         self.open_butt.setEnabled(True)
         self.fetching_list = False
 
@@ -169,6 +179,7 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
             self.fetching_list = False
         if self.downloading:
             self.downloading = False
+        pyboard.cmd = 0
 
     def closeEvent(self, evnt):
         if self.fetching_list or self.downloading:
@@ -199,7 +210,7 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
     def on_file_downloaded(self):
         file_raw = ''.join([chr(x) for x in pyboard.recieved_file])
         self.open_butt.setEnabled(True)
-        data = [list(chunkstring(x, 5)) for x in file_raw.split('\n') if len(x) == 20]
+        data = [x[:4] + list(chunkstring(x[4:], 5)) for x in file_raw.split('\n') if len(x) == 20]
         print(data)
         app.plot_graphics(data)
 
@@ -207,6 +218,7 @@ class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
 
     load_finished_signal = QtCore.pyqtSignal(int, name='load_finished_signal')
     save_finished_signal = QtCore.pyqtSignal(int, name='save_finished_signal')
+    exist_finished_signal = QtCore.pyqtSignal(int, name='exist_finished_signal')
     speeds = None
 
     def __init__(self, parent=None):
@@ -214,8 +226,37 @@ class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
         self.setupUi(self)
         self.save_button.clicked.connect(self.on_save)
         self.open_button.clicked.connect(self.on_load)
+        self.recipes_list.itemClicked.connect(self.on_list_click)
+        self.save_button.setEnabled(False)
+        self.open_button.setEnabled(False)
+        self.download_existing()
         self.load_finished_signal.connect(self.on_load_finished, QtCore.Qt.QueuedConnection)
         self.save_finished_signal.connect(self.on_save_finished, QtCore.Qt.QueuedConnection)
+        self.exist_finished_signal.connect(self.on_download_existing_finished, QtCore.Qt.QueuedConnection)
+
+    def on_list_click(self, item):
+        self.recipe_spin_box.setValue(int(item.text())) 
+
+    def download_existing(self):
+        exist_thread = threading.Thread(target=self.wait_for_existing)
+        exist_thread.daemon = True
+        exist_thread.start()
+
+    def wait_for_existing(self):
+        pyboard.download_existing()
+        time.sleep(0.1)
+        while pyboard.cmd:
+            time.sleep(0.05)
+        self.exist_finished_signal.emit(1)
+
+    def on_download_existing_finished(self, status):
+        files_raw = ''.join([chr(x) for x in pyboard.recieved_file])
+        if files_raw != 'no':
+            files = chunkstring(files_raw, 3)
+            for filename in files:
+                self.recipes_list.addItem(filename)
+        self.open_button.setEnabled(True)
+        self.save_button.setEnabled(True)
 
     def warn(self, text):
         self.warning_label.setText(text)

@@ -96,7 +96,8 @@ class MakhinaControl:
         new_time = (month, day, hours, minutes, seconds)
         if count_time_diff(self.log_time, new_time) // 60 >= 1:
             self.start_new_log()
-        self.log.write(''.join([to_float(x) for x in new_data]) + '\n')
+        self.log.write(zfill(str(hours), 2) + zfill(str(minutes), 2)\
+                       + ''.join([to_float(x) for x in new_data]) + '\n')
 
     def start(self):
         self.makhina.start()

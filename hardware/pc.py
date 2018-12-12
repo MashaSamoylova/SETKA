@@ -54,6 +54,13 @@ class Computer:
             gen = (ord(x) for y in os.listdir('/sd/logs') for x in y if x != '.')
         return await self.server.send_data(slave_addr, gen)
 
+    async def send_existing_configs(self):
+        if not os.listdir('/sd/configs'):
+            gen = (ord(x) for x in 'no')
+        else:
+            gen = (ord(x) for y in os.listdir('/sd/recipes') for x in y if x != '.')
+        return await self.server.send_data(slave_addr, gen)
+
     async def send_log(self):
         log_name_raw = await self.server.get_string(slave_addr, 70, 10)
         print(log_name_raw)

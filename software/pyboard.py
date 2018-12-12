@@ -100,17 +100,23 @@ class PyBoard():
         return local_buffer
 
     def recieve_logs_list(self):
-        self.cmd = 5
         self.recieve_flag = 0
         self.recieved_file = list()
         self.current_download = 0
+        self.cmd = 5
+
+    def download_existing(self):
+        self.recieve_flag = 0
+        self.recieved_file = list()
+        self.current_download = 0
+        self.cmd = 7
 
     def download_log(self, log_name):
         self.chosen_log_name = list(log_name.replace('.', ''))
-        self.cmd = 6
         self.recieved_flag = 0
         self.recieved_file = list()
         self.current_download = 0
+        self.cmd = 6
 
     def connect(self, port, callback):
         try:
@@ -137,7 +143,6 @@ class PyBoard():
                     if e: print(e)
                 if self.recieve_flag > 0:
                     self.recieved_file += self.flush_buffer()
-                    print(self.recieved_file)
                 if self.recieve_flag == 2:
                     self.cmd = 0
                     self.recieve_flag = -1

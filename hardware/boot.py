@@ -5,6 +5,7 @@ import os
 
 from pyb import Pin
 from pyb import Timer
+from pyb import RTC
 import uasyncio as asyncio
 
 from mainconfig import lcd_pins

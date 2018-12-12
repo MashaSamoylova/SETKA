@@ -99,6 +99,7 @@ class Ui_EditorDialog(object):
         self.label_6.setObjectName("label_6")
         self.horizontalLayout_5.addWidget(self.label_6)
         self.recipe_spin_box = QtWidgets.QSpinBox(EditorDialog)
+        self.recipe_spin_box.setMaximum(999)
         self.recipe_spin_box.setObjectName("recipe_spin_box")
         self.horizontalLayout_5.addWidget(self.recipe_spin_box)
         self.warning_label = QtWidgets.QLabel(EditorDialog)
