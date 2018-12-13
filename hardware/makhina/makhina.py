@@ -2,7 +2,8 @@ from pyb import Pin, Timer, UART
 
 from mainconfig import extruder_pulse_pin, first_head_pulse_pin,\
                        second_head_pulse_pin, reciever_pulse_pin,\
-                       motors_enable_pin, reciever_enable_pin, mesh_uart_number
+                       motors_enable_pin, reciever_enable_pin,\
+                       owen_inputs, owen_addres
 from makhina.motor import Motor
 import random
 
@@ -28,8 +29,8 @@ class Makhina:
         self.enablePulse.value(1)
         self.enablePulseReceiver.value(1)
 
-        self.mesh_thikness_uart = UART(mesh_uart_number, 9600, timeout=200)
-        self.mesh_thikness = 0
+        #self.mesh_thikness_uart = UART(mesh_uart_number, 9600, timeout=200)
+        #self.mesh_thikness = 0
 
         loop = asyncio.get_event_loop()
         loop.create_task(self.update_mesh())
@@ -50,13 +51,9 @@ class Makhina:
 
     async def update_mesh(self):
         while True:
-            if self.wip and self.mesh_thikness_uart.any():
-                self.mesh_thikness = self.mesh_thikness_uart.read()
+            #if self.wip and self.mesh_thikness_uart.any():
+             #   self.mesh_thikness = self.mesh_thikness_uart.read()
             await asyncio.sleep_ms(2000)
-
-
-owen_inputs = [1, 2, 3, 4]
-owen_addres = 16
 
 class Owen:
     def __init__(self, server, control):
@@ -64,21 +61,29 @@ class Owen:
         self.control = control
 
     async def read_owen_data(self):
-        if not self.control.makhina.wip:
+        if self.control.makhina.wip:
             return
-        """
+        
         new_nums = []
+        print(owen_inputs)
         for inpt in owen_inputs:
                 try:
                     new_data = await self.server.connection.read_holding_registers(owen_addres, inpt*6, 2)
+                    print("read from register:", new_data)
                     pointer_index, data = new_data
+                    print("pointer_index", pointer_index)
+                    print("data", data)
                     new_num = float(str(data)[:-pointer_index] + "." + str(data)[:pointer_index])
                 except Exception as e:
                      print(e, 'OWEN is broken')
                 else:
                     new_nums.append(new_num)
-                    """
-
+        if len(new_nums) == 4:
+            print("OWEN nums", new_nums)
+            self.control.log_new_data(new_nums)
+                    
+"""
         new_nums = [random.randint(0, 1000) for _ in range(4)]
         self.control.log_new_data(new_nums)
         await asyncio.sleep_ms(60 * 1000)
+        """

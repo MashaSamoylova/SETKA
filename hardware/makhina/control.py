@@ -6,7 +6,7 @@ import uasyncio as asyncio
 from mainconfig import up_button_pin, down_button_pin,\
                        right_button_pin, start_button_pin, stop_button_pin,\
                        max_temperature, max_pressure, level_material_pin, break_arm_pin,\
-                       max_mesh_thickness, emergency_stop_pin
+                       emergency_stop_pin, high_temperature_pin
 from makhina.makhina import Makhina
 from ui.utils import count_time_diff, zfill, chunkstring, to_float
 
@@ -33,6 +33,10 @@ class MakhinaControl:
         self.right_button = AnalogButton(right_button_pin)
         self.start_button = AnalogButton(start_button_pin)
         self.stop_button = AnalogButton(stop_button_pin)
+        self.level_material = machine.Pin(level_material_pin, machine.Pin.IN, machine.Pin.PULL_UP)
+        self.break_arm = machine.Pin(break_arm_pin, machine.Pin.IN, machine.Pin.PULL_UP)
+        self.emergency_stop = machine.Pin(emergency_stop_pin, machine.Pin.IN, machine.Pin.PULL_UP)
+        self.high_temperature = machine.Pin(high_temperature_pin, machine.Pin.IN, machine.Pin.PULL_UP)
 
         self.start_button.handler = self.start
         self.stop_button.handler = self.stop
@@ -81,7 +85,7 @@ class MakhinaControl:
                 self.mesh_thickness_error,
                 self.emergency_stop_error,
                 ]
-
+        
 
     def start_new_log(self):
         if self.log: self.log.close()
@@ -138,8 +142,8 @@ class MakhinaControl:
 # HOT MELT
 ###########################################
     def hot_melt_check(self):
-        print("NOTIFY", self.hot_melt_error.notify_client)
-        if (float(self.t1) > max_temperature or float(self.t2) > max_temperature):
+        if not self.high_temperature.value():
+            print("HIGHT TEMEPERATURE")
             return True
         return False
 
@@ -147,7 +151,8 @@ class MakhinaControl:
         self.stop()
 
     def skip_hot_melt(self):
-        if (float(self.t1) <=  max_temperature and float(self.t2) <= max_temperature):
+        print("SKIP", self.hot_melt_error.notify_client)
+        if self.high_temperature.value() and self.hot_melt_error.notify_client:
             self.hot_melt_error.notify_client = False
             return True
         return False
@@ -173,7 +178,7 @@ class MakhinaControl:
 # LOW RAW MATERIAL
 ############################################
     def low_raw_material_check(self):
-        if not machine.Pin(level_material_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() and not self.low_raw_material_error.notify_client:
+        if not self.level_material.value() and not self.low_raw_material_error.notify_client:
             return True
         return False
 
@@ -181,7 +186,7 @@ class MakhinaControl:
         pass
 
     def skip_low_raw_material(self):
-        if machine.Pin(level_material_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() or self.low_raw_material_error.notify_client:
+        if self.level_material.value() or self.low_raw_material_error.notify_client:
             return True
         return False
 
@@ -189,7 +194,7 @@ class MakhinaControl:
 # BREAK ARM
 ############################################
     def break_arm_check(self):
-        if not machine.Pin(break_arm_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() and not self.break_arm_error.notify_client:
+        if not self.break_arm.value() and not self.break_arm_error.notify_client:
             return True
         return False
 
@@ -197,7 +202,7 @@ class MakhinaControl:
         pass
 
     def skip_break_arm(self):
-        if machine.Pin(break_arm_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() or self.break_arm_error.notify_client:
+        if self.break_arm.value() or self.break_arm_error.notify_client:
             return True
         return False
 
@@ -206,26 +211,30 @@ class MakhinaControl:
 # MESH THICKNESS
 #############################################
     def mesh_thickness_check(self):
-        mt = float(self.makhina.mesh_thikness)
-        if mt > max_mesh_thickness:
-            return True
         return False
+        pass
+      #  mt = float(self.makhina.mesh_thikness)
+       # if mt > max_mesh_thickness:
+       #     return True
+       # return False
 
     def mesh_thickness_primary_handler(self):
         pass
 
     def skip_mesh_thickness(self):
-        mt = float(self.makhina.mesh_thikness)
-        if mt <= max_mesh_thickness and self.mesh_thickness_error.notify_client:
-            self.mesh_thickness_error.notify_client = False
-            return True
         return False
+        pass
+       # mt = float(self.makhina.mesh_thikness)
+        #if mt <= max_mesh_thickness and self.mesh_thickness_error.notify_client:
+         #   self.mesh_thickness_error.notify_client = False
+         #   return True
+        #return False
 
 #############################################
 # EMERGENCY STOP
 #############################################
     def emergency_stop_check(self):
-        if not machine.Pin(emergency_stop_pin, machine.Pin.IN, machine.Pin.PULL_UP).value():
+        if not self.emergency_stop.value():
             return True
         return False
 
@@ -233,7 +242,7 @@ class MakhinaControl:
         pass
 
     def skip_emergency_stop(self):
-        if machine.Pin(emergency_stop_pin, machine.Pin.IN, machine.Pin.PULL_UP).value() and self.emergency_stop_error.notify_client:
+        if self.emergency_stop.value() and self.emergency_stop_error.notify_client:
             return True
         return False
 
