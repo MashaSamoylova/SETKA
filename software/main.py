@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 import pathlib
 import os
@@ -211,7 +212,7 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
         file_raw = ''.join([chr(x) for x in pyboard.recieved_file])
         self.open_butt.setEnabled(True)
         data = [x[:4] + list(chunkstring(x[4:], 5)) for x in file_raw.split('\n') if len(x) == 20]
-        print(data)
+        print("GRAFIC data", data)
         app.plot_graphics(data)
 
 class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
@@ -239,24 +240,31 @@ class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
 
     def download_existing(self):
         exist_thread = threading.Thread(target=self.wait_for_existing)
-        exist_thread.daemon = True
+        exist_thread.daemon = True 
+        self.warn('Получаем список существующих рецептов...')
         exist_thread.start()
 
     def wait_for_existing(self):
         pyboard.download_existing()
         time.sleep(0.1)
-        while pyboard.cmd:
+        while pyboard.recieve_flag != -1:
             time.sleep(0.05)
         self.exist_finished_signal.emit(1)
+        print("DOWNLOAD FINISHED")
 
     def on_download_existing_finished(self, status):
+        print("BEGIN PARSING")
+        print(pyboard.recieved_file)
         files_raw = ''.join([chr(x) for x in pyboard.recieved_file])
+        print("EDITOR data", files_raw)
         if files_raw != 'no':
             files = chunkstring(files_raw, 3)
+            self.recipes_list.clear()
             for filename in files:
                 self.recipes_list.addItem(filename)
         self.open_button.setEnabled(True)
         self.save_button.setEnabled(True)
+        self.warn('Список существующих рецептов получен!')
 
     def warn(self, text):
         self.warning_label.setText(text)
@@ -274,6 +282,7 @@ class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
         self.open_button.setEnabled(True)
         self.save_button.setEnabled(True)
         self.warn('Конфиг сохранен!')
+        self.download_existing()
 
     def wait_for_save(self):
         while pyboard.cmd:

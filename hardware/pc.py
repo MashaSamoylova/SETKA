@@ -8,9 +8,10 @@ class Computer:
 
     connected = False
 
-    def __init__(self, server, control):
+    def __init__(self, server, control, screen):
         self.server = server
         self.control = control
+        self.screen = screen
 
     async def send_recipe(self, recipe):
         recipe = zfill(str(recipe), 3)
@@ -32,6 +33,7 @@ class Computer:
         recipe_values = ['{0:.1f}'.format(float(x)) for x in recipe_values]
         self.control.change_current_config(zfill(str(recipe), 3))
         self.control.set_speeds(recipe_values)
+        self.screen.draw()
         print('recipe saved')
 
     async def send_sets_request(self):
@@ -55,7 +57,7 @@ class Computer:
         return await self.server.send_data(slave_addr, gen)
 
     async def send_existing_configs(self):
-        if not os.listdir('/sd/configs'):
+        if not os.listdir('/sd/recipes'):
             gen = (ord(x) for x in 'no')
         else:
             gen = (ord(x) for y in os.listdir('/sd/recipes') for x in y if x != '.')
@@ -99,6 +101,8 @@ class Computer:
                 res = await self.send_logs_list()
             if cmd == 6:
                 res = await self.send_log()
+            if cmd == 7:
+                res = await self.send_existing_configs()
             if cmd and cmd not in [5, 6]: await self.clear_command()
             return res
 

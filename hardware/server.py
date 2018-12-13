@@ -16,9 +16,9 @@ class ModbusMaster:
     sending_block = False
     data_len = 0
 
-    def __init__(self, control):
+    def __init__(self, control, screen):
         self.connection = Serial(6, baudrate=115200, ctrl_pin=uart_ctrl_pin)
-        self.pc = Computer(self, control)
+        self.pc = Computer(self, control, screen)
         self.owen = Owen(self, control)
         loop = asyncio.get_event_loop()
         loop.create_task(self.serve())
@@ -52,8 +52,6 @@ class ModbusMaster:
     async def send_data(self, slave_addr, data):
         self.sending_data = iter(data)
         self.sending_offset = 0
-        #self.data_len = ceil(len(self.send_data) / self.buffer_len)
-        #return await self.connection.write_single_register(slave_addr, 4, self.data_len)
 
     async def send_file(self, slave_addr, filename):
         return await self.send_data(slave_addr, file_iter('/sd/logs/' + filename))

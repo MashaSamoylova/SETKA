@@ -26,6 +26,7 @@ without_compress:
 	mkdir -p _build/uasyncio
 	mkdir -p _build/makhina
 	mkdir -p _build/recipes
+	mkdir -p _build/logs
 	touch _build/makhina/__init__.py
 	cp boot.py ./_build/boot.py 
 	cp main.py ./_build/main.py

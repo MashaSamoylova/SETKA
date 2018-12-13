@@ -112,6 +112,7 @@ class PyBoard():
         self.cmd = 7
 
     def download_log(self, log_name):
+        print("log name", log_name)
         self.chosen_log_name = list(log_name.replace('.', ''))
         self.recieved_flag = 0
         self.recieved_file = list()
@@ -143,6 +144,7 @@ class PyBoard():
                     if e: print(e)
                 if self.recieve_flag > 0:
                     self.recieved_file += self.flush_buffer()
+                    print("FILE", self.recieved_file)
                 if self.recieve_flag == 2:
                     self.cmd = 0
                     self.recieve_flag = -1

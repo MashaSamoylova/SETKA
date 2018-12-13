@@ -32,4 +32,4 @@ lcd.erase()
 # gui
 makhina_control = MakhinaControl()
 main_screen = Screen(lcd, makhina_control)
-master = ModbusMaster(makhina_control)
+master = ModbusMaster(makhina_control, main_screen)

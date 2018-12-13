@@ -15,7 +15,7 @@ class Makhina:
 
     def __init__(self):
         self.extrudo_engine = Motor(Timer(10), Pin(extruder_pulse_pin, Pin.OUT), 5000, 1)
-        self.first_head_engine = Motor(Timer(8), Pin(first_head_pulse_pin, Pin.OUT), 18000, 3)
+        self.first_head_engine = Motor(Timer(1), Pin(first_head_pulse_pin, Pin.OUT), 18000, 3)
         self.second_head_engine = Motor(Timer(1), Pin(second_head_pulse_pin, Pin.OUT), 18000, 1)
         self.reciever_engine = Motor(Timer(4), Pin(reciever_pulse_pin, Pin.OUT), 3200, 1)
 
@@ -52,11 +52,10 @@ class Makhina:
         while True:
             if self.wip and self.mesh_thikness_uart.any():
                 self.mesh_thikness = self.mesh_thikness_uart.read()
-
             await asyncio.sleep_ms(2000)
 
 
-owen_pins = [1, 2, 3, 4]
+owen_inputs = [1, 2, 3, 4]
 owen_addres = 16
 
 class Owen:
@@ -67,15 +66,19 @@ class Owen:
     async def read_owen_data(self):
         if not self.control.makhina.wip:
             return
-        """try:
-            new_data = await self.server.connection.read_holding_registers(owen_addres, 0, 48)
-        except Exception as e:
-            print(e, 'OWEN is broken')
-        else:
-            print(new_data)
-            new_data = [new_data[pin * 6 + 1] for pin in owen_pins]
-            print(new_data)
         """
-        new_data = [random.randint(0, 1000) for _ in range(4)]
-        self.control.log_new_data(new_data)
+        new_nums = []
+        for inpt in owen_inputs:
+                try:
+                    new_data = await self.server.connection.read_holding_registers(owen_addres, inpt*6, 2)
+                    pointer_index, data = new_data
+                    new_num = float(str(data)[:-pointer_index] + "." + str(data)[:pointer_index])
+                except Exception as e:
+                     print(e, 'OWEN is broken')
+                else:
+                    new_nums.append(new_num)
+                    """
+
+        new_nums = [random.randint(0, 1000) for _ in range(4)]
+        self.control.log_new_data(new_nums)
         await asyncio.sleep_ms(60 * 1000)

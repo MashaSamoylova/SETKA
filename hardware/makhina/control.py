@@ -123,13 +123,13 @@ class MakhinaControl:
     def change_current_config(self, config):
         self.config = zfill(str(config), 3)
         print("current_config", self.config)
-        try:
-            with open("/sd/recipes/" + self.config) as f:
-                speeds = f.read()
-        except:
-            with open("/sd/recipes/" + self.config, "w") as f:
-                speeds = "000.0" * 4
-                f.write(speeds)
+       # try:
+        #    with open("/sd/recipes/" + self.config) as f:
+         #       speeds = f.read()
+        #except:
+        with open("/sd/recipes/" + self.config, "w") as f:
+            speeds = "000.0" * 4
+            f.write(speeds)
 
         self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed = chunkstring(speeds, 5)
         self.set_speeds((self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed))
