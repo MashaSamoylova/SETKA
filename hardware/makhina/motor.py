@@ -2,6 +2,7 @@ import pyb
 import math
 
 import uasyncio as asyncio
+from mainconfig import acceleration_delay
 
 
 class Motor:
@@ -46,15 +47,17 @@ class Motor:
 
         if not self.__gz_current:
             self.timer.deinit()
+            pass
         else:
             self.timer.freq(self.__gz_current)
+            pass
 
     async def run(self):
         while True:
             # accelfunction sets accel_status in False when __gz_current = __qz_new
             if self.accel_status:
                 self.accel()
-            await asyncio.sleep_ms(1000)
+            await asyncio.sleep_ms(acceleration_delay)
 
     
     def stop(self):

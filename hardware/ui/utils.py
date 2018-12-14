@@ -29,4 +29,4 @@ def file_iter(filename):
             yield from (ord(x) for y in buf for x in y)
             buf.clear()
     if buf:
-        yield buf
+        yield from (ord(x) for y in buf for x in y)

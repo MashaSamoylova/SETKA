@@ -24,6 +24,7 @@ class ModbusMaster:
         loop.create_task(self.serve())
 
     async def proceed_sending(self):
+        print('SENDING OFFSET', self.sending_offset)
         self.sending_block = True
         to_send = []
         try:
@@ -36,13 +37,24 @@ class ModbusMaster:
         else:
             self.sending_offset += 1
         try:
+            if not to_send:
+                self.sending_block = False
+                self.sending_offset = -1
+                self.sending_data = None
+                self.data_len = 0
+                recieve_flag = 2 if self.sending_offset == -1 else 1
+                res2 = await self.connection.write_single_register(5, 99, recieve_flag)
+                return 1
             res1 = await self.connection.write_multiple_registers(5, self.buffer_start, to_send)
             print('res1', res1)
             recieve_flag = 2 if self.sending_offset == -1 else 1
             res2 = await self.connection.write_single_register(5, 99, recieve_flag)
             print('res2', res1)
         except Exception as e:
-            print('proceed exception', e)
+            if 'no data' in str(e):
+                print('proceed exception', e)
+            else:
+                raise e
             return 0
         else:
             return res1 or res2
@@ -51,6 +63,7 @@ class ModbusMaster:
 
     async def send_data(self, slave_addr, data):
         self.sending_data = iter(data)
+        self.sending_block = False
         self.sending_offset = 0
 
     async def send_file(self, slave_addr, filename):

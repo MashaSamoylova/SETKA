@@ -6,7 +6,7 @@ import uasyncio as asyncio
 from mainconfig import up_button_pin, down_button_pin,\
                        right_button_pin, start_button_pin, stop_button_pin,\
                        max_pressure, level_material_pin, break_arm_pin,\
-                       emergency_stop_pin, high_temperature_pin
+                       emergency_stop_pin, high_temperature_pin, log_length
 from makhina.makhina import Makhina
 from ui.utils import count_time_diff, zfill, chunkstring, to_float
 
@@ -24,6 +24,7 @@ class MakhinaControl:
     first_head_speed = ""
     second_head_speed = ""
     reciever_speed = ""
+    current_error = -1
 
     def __init__(self):
         self.makhina = Makhina()
@@ -85,7 +86,6 @@ class MakhinaControl:
                 self.mesh_thickness_error,
                 self.emergency_stop_error,
                 ]
-        
 
     def start_new_log(self):
         if self.log: self.log.close()
@@ -98,7 +98,7 @@ class MakhinaControl:
         self.t1, self.t2, self.p1, self.p2 = new_data
         *_, month, day, _, hours, minutes, seconds, _ = self.rtc.datetime()
         new_time = (month, day, hours, minutes, seconds)
-        if count_time_diff(self.log_time, new_time) // 60 >= 1:
+        if count_time_diff(self.log_time, new_time) // 60 >= log_length:
             self.start_new_log()
         print("writing in log")
         self.log.write(zfill(str(hours), 2) + zfill(str(minutes), 2)\
@@ -164,14 +164,15 @@ class MakhinaControl:
     def high_pressure_check(self):
         if float(self.p1) > max_pressure or float(self.p2) > max_pressure:
             return True
-        return False
+        return True
 
     def high_pressure_primary_handler(self):
         self.stop()
 
     def skip_high_pressure(self):
-        if float(self.p1) <= max_pressure or float(self.p2) <= max_pressure and self.high_pressure_error.notify_client:
+        if (float(self.p1) <= max_pressure or float(self.p2) <= max_pressure) and self.high_pressure_error.notify_client:
             self.high_pressure_error.notify_client = False
+            print("SUKA BLIT")
             return True
         return False
 

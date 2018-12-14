@@ -15,7 +15,7 @@ from windows.settings import Ui_Dialog
 from windows.editordialog import Ui_EditorDialog
 from windows.connectdialog import Ui_Dialog as Ui_ConnectDialog
 from windows.graphicsdialog import Ui_GraphicsDialog
-from pyboard import PyBoard
+from pyboard import PyBoard, error_map
 from utils import to_float, chunkstring
 
 pyboard = PyBoard()
@@ -59,8 +59,11 @@ class SETKAapp(Ui_MainWindow):
         timer.timeout.connect(self.update)
         timer.start(1000)
 
-    def print_error(self, text):
-        self.error_label.setText(text)
+    def update_error(self):
+        if pyboard.error_status:
+            self.error_label.setText(error_map[pyboard.error_status - 2])
+        else:
+            self.error_label.setText('')
 
     def update(self):
         """Called every second"""
@@ -76,9 +79,8 @@ class SETKAapp(Ui_MainWindow):
         self.main_table.item(7, 0).setText(''.join(pyboard.t2))
         self.main_table.item(8, 0).setText(''.join(pyboard.p1))
         self.main_table.item(9, 0).setText(''.join(pyboard.p2))
-        self.main_table.item(12, 0).setText(''.join(pyboard.config))
-        if pyboard.error_status:
-            print_error(pyboard.error_map[error_status])
+        self.main_table.item(12, 0).setText(''.join(pyboard.config)[:3])
+        self.update_error()
 
     def connect_slots(self):
         slots = [x.triggered for x in [self.connect_pyboard_button,
@@ -121,6 +123,8 @@ class SETKAapp(Ui_MainWindow):
 
     def plot_graphics(self, data):
         ticks = [':'.join(chunkstring(x[0], 2)) for x in data]
+        print(data)
+        print(ticks)
         int_time = [int(x[0]) for x in data]
         temp1 = [float(x[1]) for x in data] 
         temp2 = [float(x[2]) for x in data] 
@@ -128,8 +132,11 @@ class SETKAapp(Ui_MainWindow):
         press2 = [float(x[4]) for x in data]
         self.temp_graph.axis.clear()
         self.press_graph.axis.clear()
-        for axis in [self.temp_graph.axis, self.press_graph.axis]:
-            axis.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: ticks[pos]))
+        try:
+            for axis in [self.temp_graph.axis, self.press_graph.axis]:
+                axis.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: ticks[pos]))
+        except Exception as e:
+            print(e)
         self.temp_graph.axis.plot(int_time, temp1, 'C1', label='T1')
         self.temp_graph.axis.plot(int_time, temp2, 'C3', label='T2')
         self.temp_graph.axis.legend()
@@ -216,7 +223,7 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
     def on_file_downloaded(self):
         file_raw = ''.join([chr(x) for x in pyboard.recieved_file])
         self.open_butt.setEnabled(True)
-        data = [x[:4] + list(chunkstring(x[4:], 5)) for x in file_raw.split('\n') if len(x) == 20]
+        data = [[x[:4]] + list(chunkstring(x[4:], 5)) for x in file_raw.split('\n') if len(x) == 24]
         print("GRAFIC data", data)
         app.plot_graphics(data)
 

@@ -47,7 +47,8 @@ class Computer:
             self.control.t2,
             self.control.p1,
             self.control.p2]))
-        return res
+        res2 = await self.server.connection.write_single_register(slave_addr, 98, self.control.current_error + 1)
+        return res and res2
 
     async def send_logs_list(self):
         if not os.listdir('/sd/logs'):
@@ -65,7 +66,6 @@ class Computer:
 
     async def send_log(self):
         log_name_raw = await self.server.get_string(slave_addr, 70, 10)
-        print(log_name_raw)
         log_name = '.'.join(chunkstring(log_name_raw, 2))
         print(log_name)
         if log_name not in os.listdir('/sd/logs'):

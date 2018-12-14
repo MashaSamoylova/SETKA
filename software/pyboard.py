@@ -9,6 +9,13 @@ from umodbus.server.serial.rtu import RTUServer
 from umodbus.utils import log_to_stream
 import os
 
+error_map = ["Перегрев расплава",
+             "Превышено давление",
+             "Низкий уровень сырья",
+             "Обрыв рукава",
+             "Превышена толщина сетки",
+             "Аварийная остановка"]
+
 class PyBoard():
 
     server = None
@@ -32,7 +39,6 @@ class PyBoard():
     current_download = 0
     chosen_log_name = list('0'*10)
     error_status = 0
-    error_map = []
 
     def __init__(self):
         pass

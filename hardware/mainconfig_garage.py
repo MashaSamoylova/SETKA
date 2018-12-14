@@ -14,7 +14,7 @@ motors_enable_pin = 'Y5'
 reciever_enable_pin = 'Y7'
 
 uart_pin = 6
-uart_ctrl_pin = 'Y11'
+uart_ctrl_pin = 'X6'
 
 max_temperature = 200
 max_pressure = 200

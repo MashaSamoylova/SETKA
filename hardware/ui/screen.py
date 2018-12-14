@@ -129,6 +129,7 @@ class Screen:
                 5 : "↑толщина.сетки",
                 6 : "Останов",
                 }
+        self.makhina_control.current_error = code
         self.tab1.edit_mode_off()
         self.tab3.edit_mode_off()
         self.status_error = True
