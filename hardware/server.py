@@ -54,6 +54,7 @@ class ModbusMaster:
         self.sending_offset = 0
 
     async def send_file(self, slave_addr, filename):
+        print("FILE NAME", filename)
         return await self.send_data(slave_addr, file_iter('/sd/logs/' + filename))
 
     async def send_string(self, slave_addr, starting_address, text):

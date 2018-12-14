@@ -28,13 +28,16 @@ class Screen:
         self.tab2 = Tab2(lcd, makhina_control)
         self.tab3 = Tab3(lcd, makhina_control)
         self.tabs = [self.tab1, self.tab2, self.tab3]
+
         self.error_button = Button(lcd, 0, 125, 128, 30, "")
+        self.error_button.text_position_x = 150
+        self.error_button.text_position_y = 130
         self.error_button.handler = self.notify_error
         loop = asyncio.get_event_loop()
         loop.create_task(self.handle_lcd_touch())
-        #loop.create_task(self.check_errors())
-        #loop.create_task(self.skip_errors())
-        #loop.create_task(self.unset_notify_client())
+        loop.create_task(self.check_errors())
+        loop.create_task(self.skip_errors())
+        loop.create_task(self.unset_notify_client())
 
     def draw(self):
         """Draw tab buttons, errors and current tab"""
@@ -118,13 +121,21 @@ class Screen:
         return -1
 
     def set_status_error(self, code):
+        codes = {
+                1 : "Перегрев",
+                2 : "↑давление",
+                3 : "↓ур.сырья",
+                4 : "Обрыв.рук.",
+                5 : "↑толщина.сетки",
+                6 : "Останов",
+                }
         self.tab1.edit_mode_off()
         self.tab3.edit_mode_off()
         self.status_error = True
-        self.error_button.text = str(code)
+        self.error_button.text = codes[code]
 
     def draw_error(self):
-        self.error_button.draw(colors["black"], colors["red"])
+        self.error_button.draw(colors["white"], colors["red"])
 
     def notify_error(self):
         self.error_button.draw(colors["red"], colors["white"])

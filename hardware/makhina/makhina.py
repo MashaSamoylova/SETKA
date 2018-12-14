@@ -29,18 +29,13 @@ class Makhina:
         self.enablePulse.value(1)
         self.enablePulseReceiver.value(1)
 
-        #self.mesh_thikness_uart = UART(mesh_uart_number, 9600, timeout=200)
-        #self.mesh_thikness = 0
-
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.update_mesh())
-    
     def start(self):
         self.wip = True
         self.enablePulse.value(0)
         self.enablePulseReceiver.value(0)
         for engine in self.engines:
             engine.accel_status = True
+        print("ALOALOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
 
     def stop(self):
         self.wip = False
@@ -49,21 +44,20 @@ class Makhina:
         for engine in self.engines:
             engine.stop()
 
-    async def update_mesh(self):
-        while True:
-            #if self.wip and self.mesh_thikness_uart.any():
-             #   self.mesh_thikness = self.mesh_thikness_uart.read()
-            await asyncio.sleep_ms(2000)
-
 class Owen:
     def __init__(self, server, control):
         self.server = server
         self.control = control
 
     async def read_owen_data(self):
-        if self.control.makhina.wip:
+        if not self.control.makhina.wip:
             return
         
+        print("read from owen")
+        new_nums = [random.randint(0, 1000) for _ in range(4)]
+        self.control.log_new_data(new_nums)
+        await asyncio.sleep_ms(60 * 1000)
+""" 
         new_nums = []
         print(owen_inputs)
         for inpt in owen_inputs:
@@ -83,7 +77,3 @@ class Owen:
             self.control.log_new_data(new_nums)
                     
 """
-        new_nums = [random.randint(0, 1000) for _ in range(4)]
-        self.control.log_new_data(new_nums)
-        await asyncio.sleep_ms(60 * 1000)
-        """
