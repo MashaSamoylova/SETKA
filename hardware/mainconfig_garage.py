@@ -1,32 +1,51 @@
+#-------------- PINS ------------------
+#======================================
+# Пины цифровых кнопок
 up_button_pin = 'Y4'
 down_button_pin = 'Y8'
 right_button_pin = 'X11'
 start_button_pin = 'X12'
 stop_button_pin = 'X10'
+
+# lcd соединение
+# см http://docs.micropython.org/en/v1.9.4/pyboard/library/lcd160cr.html#lcd160cr.LCD160CR
 lcd_pins = 'XY'
 
-extruder_pulse_pin = 'Y3'
-first_head_pulse_pin = 'Y12'
-second_head_pulse_pin = 'Y6'
-reciever_pulse_pin = 'X9'
+# Пины шаговиков
+extruder_pulse_pin = 'Y3' # экструдер
+first_head_pulse_pin = 'Y12' # ШДГ1
+second_head_pulse_pin = 'Y6' # ШДГ2
+reciever_pulse_pin = 'X9' # Приемка
 
+# Пины для подачи питания на шаговки
 motors_enable_pin = 'Y5'
 reciever_enable_pin = 'Y7'
 
-uart_pin = 6
-uart_ctrl_pin = 'X6'
-
-max_temperature = 200
-max_pressure = 200
-
-level_material_pin = "X3"
-break_arm_pin = "X7"
-emergency_stop_pin = "X8"
-high_temperature_pin = "X5"
-
-#mesh_uart_number = 1
-#max_mesh_thickness = 100
+uart_pin = 6 # номер uart
+uart_ctrl_pin = 'X6' # RSE пин
 
 
-owen_inputs = [4, 4, 4, 4]
-owen_addres = 16
+# Пины датчиков ошибок
+level_material_pin = "X3" # низкий уровень сырья
+break_arm_pin = "X7" # обрыв рукава
+emergency_stop_pin = "X8" # аварийный останов
+high_temperature_pin = "X5" # перегрев расплава
+
+
+
+#--------------Settings-----------------
+#=======================================
+max_pressure = 1000 # Превышение давления вызывает ошибку "Первышено давление"
+
+log_length = 15 # minutes
+acceleration_delay = 500 # milliseconds
+
+# ОВЕН
+owen_inputs = [4, 4, 4, 4] # входы овена
+owen_addres = 16 # адрес овена в сети modbus
+
+# Ограничения оборотов шаговиков
+max_extruder_round = 120.0 # максимальное количество оботов экструдера об/мин
+max_first_head_round = 60.0 # максимальное количество оборотов ШДГ1 об/мин
+max_second_head_round = 60.0 # максимальное количество оборотов ШДГ2 об/мин
+max_reciver_round = 60.0 # максимальное количество оборотов приемки об/мин

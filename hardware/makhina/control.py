@@ -6,7 +6,11 @@ import uasyncio as asyncio
 from mainconfig import up_button_pin, down_button_pin,\
                        right_button_pin, start_button_pin, stop_button_pin,\
                        max_pressure, level_material_pin, break_arm_pin,\
-                       emergency_stop_pin, high_temperature_pin, log_length
+                       emergency_stop_pin, high_temperature_pin, log_length,\
+                       max_extruder_round, max_first_head_round,\
+                       max_second_head_round, max_reciver_round 
+
+
 from makhina.makhina import Makhina
 from ui.utils import count_time_diff, zfill, chunkstring, to_float
 
@@ -20,10 +24,10 @@ class MakhinaControl:
     p1 = '000.0'
     p2 = '000.0'
     config = '000'
-    extrudo_speed = ""
-    first_head_speed = ""
-    second_head_speed = ""
-    reciever_speed = ""
+    extrudo_speed = "000.0"
+    first_head_speed = "00.0"
+    second_head_speed = "00.0"
+    reciever_speed = "00.0"
     current_error = -1
 
     def __init__(self):
@@ -41,8 +45,6 @@ class MakhinaControl:
 
         self.start_button.handler = self.start
         self.stop_button.handler = self.stop
-
-        # скорости в форме строки, чтобы не переводить из частоты обратно
 
         self.change_current_config('000')
         self.rtc = RTC()
@@ -107,14 +109,26 @@ class MakhinaControl:
     def start(self):
         self.makhina.start()
         self.start_new_log()
-        print("MAKHINA STAAAAAAAAAAAAART")
 
     def stop(self):
         self.makhina.stop()
 
+    def check_max(self):
+        print("check max")
+        if float(self.extrudo_speed) > max_extruder_round:
+            self.extrudo_speed = str(max_extruder_round)
+        if float(self.first_head_speed) > max_first_head_round:
+            self.first_head_speed = str(max_first_head_round)
+        if float(self.second_head_speed) > max_second_head_round:
+            self.second_head_speed = str(max_second_head_round)
+        if float(self.reciever_speed) > max_reciver_round:
+            self.reciever_speed = str(max_reciver_round)
+
     def set_speeds(self, speeds):
         self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed = speeds
-        print('Speeds in set speeds', speeds)
+        self.check_max()
+
+        print('Speeds in set speeds', self.extrudo_speed)
 
         self.makhina.extrudo_engine.set_round_per_min(float(self.extrudo_speed))
         self.makhina.first_head_engine.set_round_per_min(float(self.first_head_speed))
@@ -138,6 +152,9 @@ class MakhinaControl:
                 f.write(speeds)
 
         self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed = chunkstring(speeds, 5)
+        self.first_head_speed = self.first_head_speed[1:]
+        self.second_head_speed = self.second_head_speed[1:]
+        self.reciever_speed = self.reciever_speed[1:]
         self.set_speeds((self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed))
 
 ###########################################
@@ -164,7 +181,7 @@ class MakhinaControl:
     def high_pressure_check(self):
         if float(self.p1) > max_pressure or float(self.p2) > max_pressure:
             return True
-        return True
+        return False
 
     def high_pressure_primary_handler(self):
         self.stop()

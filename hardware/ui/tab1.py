@@ -1,7 +1,6 @@
 from ui.views import Button, EditableButton
 from ui.utils import colors
 
-
 class Tab1:
     """First tab, consists of 4 EditableButtons and a "Change" button"""
 
@@ -14,8 +13,11 @@ class Tab1:
 
         self.extrudo_button = EditableButton(lcd, 45, 30, 128, 20, "")
         self.first_head_button = EditableButton(lcd, 45, 55, 128, 20, "")
+        self.first_head_button.text_position_x = 60
         self.second_head_button = EditableButton(lcd, 45, 80, 128, 20, "")
+        self.second_head_button.text_position_x = 60
         self.acceptance_button = EditableButton(lcd, 45, 105, 128, 20, "")
+        self.acceptance_button.text_position_x = 60
         self.engines_buttons = [self.extrudo_button, self.first_head_button, 
                            self.second_head_button, self.acceptance_button]
 
