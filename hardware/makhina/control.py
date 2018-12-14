@@ -5,7 +5,7 @@ import uasyncio as asyncio
 
 from mainconfig import up_button_pin, down_button_pin,\
                        right_button_pin, start_button_pin, stop_button_pin,\
-                       max_temperature, max_pressure, level_material_pin, break_arm_pin,\
+                       max_pressure, level_material_pin, break_arm_pin,\
                        emergency_stop_pin, high_temperature_pin
 from makhina.makhina import Makhina
 from ui.utils import count_time_diff, zfill, chunkstring, to_float
@@ -100,12 +100,14 @@ class MakhinaControl:
         new_time = (month, day, hours, minutes, seconds)
         if count_time_diff(self.log_time, new_time) // 60 >= 1:
             self.start_new_log()
+        print("writing in log")
         self.log.write(zfill(str(hours), 2) + zfill(str(minutes), 2)\
                        + ''.join([to_float(x) for x in new_data]) + '\n')
 
     def start(self):
         self.makhina.start()
         self.start_new_log()
+        print("MAKHINA STAAAAAAAAAAAAART")
 
     def stop(self):
         self.makhina.stop()
@@ -127,13 +129,13 @@ class MakhinaControl:
     def change_current_config(self, config):
         self.config = zfill(str(config), 3)
         print("current_config", self.config)
-       # try:
-        #    with open("/sd/recipes/" + self.config) as f:
-         #       speeds = f.read()
-        #except:
-        with open("/sd/recipes/" + self.config, "w") as f:
-            speeds = "000.0" * 4
-            f.write(speeds)
+        try:
+            with open("/sd/recipes/" + self.config) as f:
+                speeds = f.read()
+        except:
+            with open("/sd/recipes/" + self.config, "w") as f:
+                speeds = "000.0" * 4
+                f.write(speeds)
 
         self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed = chunkstring(speeds, 5)
         self.set_speeds((self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed))
@@ -143,7 +145,6 @@ class MakhinaControl:
 ###########################################
     def hot_melt_check(self):
         if not self.high_temperature.value():
-            print("HIGHT TEMEPERATURE")
             return True
         return False
 
