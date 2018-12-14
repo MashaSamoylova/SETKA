@@ -9,6 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
+from matplotlib.widgets import Slider
 
 from windows.mainwindow import Ui_MainWindow
 from windows.settings import Ui_Dialog
@@ -21,18 +22,42 @@ from utils import to_float, chunkstring
 pyboard = PyBoard()
 
 class MatplotlibWidget(QtWidgets.QWidget):
+
+    timelen = 900
+    ticks = []
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.figure = Figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
-        self.canvas.setMinimumSize(QtCore.QSize(1500, 0))
+        # self.canvas.setMinimumSize(QtCore.QSize(1500, 0))
 
         self.axis = self.figure.add_subplot(111)
-        self.axis.set_ylim(0, 200)
+        self.update(0)
+        #self.spos = Slider(self.axis, 'Время', 0, 150)
+        #self.spos.on_changed(self.update)
+
+        self.sld = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.sld.setFocusPolicy (QtCore.Qt.NoFocus)
+        self.sld.valueChanged[int].connect(self.update)
+        self.sld.valueChanged.connect(self.redraw)
 
         self.layoutVertical = QtWidgets.QVBoxLayout(self)
         self.layoutVertical.addWidget(self.canvas)
+        self.layoutVertical.addWidget(self.sld)
+
+    def clear(self):
+        self.axis.clear()
+        self.sld.setValue(0)
+
+    def redraw(self):
+        self.canvas.draw_idle()
+
+    def update(self, val):
+        a, b = val * (self.timelen // 100), (val + 1) * (self.timelen // 100)
+        self.axis.set_xticklabels(self.ticks[a:b])
+        self.axis.set_xlim(a, b)
 
 
 class SETKAapp(Ui_MainWindow):
@@ -46,41 +71,41 @@ class SETKAapp(Ui_MainWindow):
         self.press_graph = MatplotlibWidget(self.MainWindow)
         self.temp_scroll.setWidget(self.temp_graph)
         self.press_scroll.setWidget(self.press_graph)
-        #import random
-        #r_data = []
-        #cur_time = 0
-        #for i in range(900):
-        #    r_data.append([str(cur_time).zfill(4)] + [random.randint(0, 100) for _ in range(4)])
-        #    cur_time += random.randint(1, 3)
-        #self.plot_graphics(r_data)
+        import random
+        r_data = []
+        cur_time = 0
+        cur_temp = 0
+        for i in range(900):
+            r_data.append([str(cur_time).zfill(4)] + [cur_temp for _ in range(4)])
+            cur_time += random.randint(1, 3)
+            cur_temp += random.randint(5, 30) - 15
+        self.plot_graphics(r_data)
         self.connect_slots()
         self.datetime = QtCore.QDateTime.currentDateTime()
         timer = QtCore.QTimer(self.app)
         timer.timeout.connect(self.update)
         timer.start(1000)
 
-    def update_error(self):
-        if pyboard.error_status:
-            self.error_label.setText(error_map[pyboard.error_status - 2])
-        else:
-            self.error_label.setText('')
-
     def update(self):
         """Called every second"""
 
+        error_string = 'Подключите PyBoard'
         self.datetime = self.datetime.addSecs(1)
-        self.main_table.item(13, 0).setText(self.datetime.time().toString())
-        self.main_table.item(14, 0).setText(self.datetime.date().toString())
-        self.main_table.item(1, 0).setText(''.join(pyboard.extruder_speed))
-        self.main_table.item(2, 0).setText(''.join(pyboard.first_head_speed))
-        self.main_table.item(3, 0).setText(''.join(pyboard.second_head_speed))
-        self.main_table.item(4, 0).setText(''.join(pyboard.reciever_speed))
-        self.main_table.item(6, 0).setText(''.join(pyboard.t1))
-        self.main_table.item(7, 0).setText(''.join(pyboard.t2))
-        self.main_table.item(8, 0).setText(''.join(pyboard.p1))
-        self.main_table.item(9, 0).setText(''.join(pyboard.p2))
-        self.main_table.item(12, 0).setText(''.join(pyboard.config)[:3])
-        self.update_error()
+        self.engines_table.item(0, 0).setText(''.join(pyboard.extruder_speed) if pyboard.connected else error_string)
+        self.engines_table.item(1, 0).setText(''.join(pyboard.first_head_speed) if pyboard.connected else error_string)
+        self.engines_table.item(2, 0).setText(''.join(pyboard.second_head_speed) if pyboard.connected else error_string)
+        self.engines_table.item(3, 0).setText(''.join(pyboard.reciever_speed) if pyboard.connected else error_string)
+        self.data_table.item(0, 0).setText(''.join(pyboard.t1) if pyboard.connected else error_string)
+        self.data_table.item(1, 0).setText(''.join(pyboard.t2) if pyboard.connected else error_string)
+        self.data_table.item(2, 0).setText(''.join(pyboard.p1) if pyboard.connected else error_string)
+        self.data_table.item(3, 0).setText(''.join(pyboard.p2) if pyboard.connected else error_string)
+        self.misc_table.item(0, 0).setText(''.join(pyboard.config)[:3] if pyboard.connected else error_string)
+        self.misc_table.item(1, 0).setText(self.datetime.time().toString() )
+        self.misc_table.item(2, 0).setText(self.datetime.date().toString())
+        if pyboard.error_status:
+            self.misc_table.item(3, 0).setText(error_map[pyboard.error_status - 2] if pyboard.connected else error_string)
+        else:
+            self.misc_table.item(3, 0).setText('' if pyboard.connected else error_string)
 
     def connect_slots(self):
         slots = [x.triggered for x in [self.connect_pyboard_button,
@@ -125,18 +150,19 @@ class SETKAapp(Ui_MainWindow):
         ticks = [':'.join(chunkstring(x[0], 2)) for x in data]
         print(data)
         print(ticks)
-        int_time = [int(x[0]) for x in data]
+        int_time = list(range(len(data)))
         temp1 = [float(x[1]) for x in data] 
         temp2 = [float(x[2]) for x in data] 
         press1 = [float(x[3]) for x in data] 
         press2 = [float(x[4]) for x in data]
-        self.temp_graph.axis.clear()
-        self.press_graph.axis.clear()
-        try:
-            for axis in [self.temp_graph.axis, self.press_graph.axis]:
-                axis.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: ticks[pos]))
-        except Exception as e:
-            print(e)
+        temp_ticks_func = lambda x, pos: ticks[pos]
+        press_ticks_func = lambda x, pos: ticks[pos]
+        self.temp_graph.axis.xaxis.set_major_formatter(FuncFormatter(temp_ticks_func))
+        self.press_graph.axis.xaxis.set_major_formatter(FuncFormatter(press_ticks_func))
+        for graph in [self.temp_graph, self.press_graph]:
+            graph.clear()
+            graph.ticks = ticks
+            graph.timelen = len(data)
         self.temp_graph.axis.plot(int_time, temp1, 'C1', label='T1')
         self.temp_graph.axis.plot(int_time, temp2, 'C3', label='T2')
         self.temp_graph.axis.legend()

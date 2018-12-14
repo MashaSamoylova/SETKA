@@ -62,12 +62,12 @@ class Owen:
         for inpt in owen_inputs:
                 try:
                     #new_data = await self.server.connection.read_holding_registers(owen_addres, 32, 2)
-                    new_data = await self.server.connection.read_holding_registers(owen_addres, (inpt-1)*6, 2)
+                    new_data = await self.server.connection.read_holding_registers(owen_addres, (inpt-1)*6, 1)
                     print("read from register:", new_data)
                     pointer_index, data = new_data
                     print("pointer_index", pointer_index)
                     print("data", data)
-                    new_num = float(str(data)[:-pointer_index] + "." + str(data)[:pointer_index])
+                    new_num = data / 10
                 except Exception as e:
                      print(e, 'OWEN is broken')
                 else:
