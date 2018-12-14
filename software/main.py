@@ -59,6 +59,9 @@ class SETKAapp(Ui_MainWindow):
         timer.timeout.connect(self.update)
         timer.start(1000)
 
+    def print_error(self, text):
+        self.error_label.setText(text)
+
     def update(self):
         """Called every second"""
 
@@ -74,6 +77,8 @@ class SETKAapp(Ui_MainWindow):
         self.main_table.item(8, 0).setText(''.join(pyboard.p1))
         self.main_table.item(9, 0).setText(''.join(pyboard.p2))
         self.main_table.item(12, 0).setText(''.join(pyboard.config))
+        if pyboard.error_status:
+            print_error(pyboard.error_map[error_status])
 
     def connect_slots(self):
         slots = [x.triggered for x in [self.connect_pyboard_button,

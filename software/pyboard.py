@@ -31,6 +31,8 @@ class PyBoard():
     recieved_file = None
     current_download = 0
     chosen_log_name = list('0'*10)
+    error_status = 0
+    error_map = []
 
     def __init__(self):
         pass
@@ -67,6 +69,8 @@ class PyBoard():
             self.arg = value
         if address == 4:
             self.master_arg = value
+        if address == 98:
+            self.error_status = value
         if address == 99:
             self.recieve_flag = value
 

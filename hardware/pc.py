@@ -103,7 +103,7 @@ class Computer:
                 res = await self.send_log()
             if cmd == 7:
                 res = await self.send_existing_configs()
-            if cmd and cmd not in [5, 6]: await self.clear_command()
+            if cmd and cmd not in [5, 6, 7]: await self.clear_command()
             return res
 
     async def try_connect(self):
