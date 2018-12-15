@@ -6,7 +6,7 @@ from ui.utils import colors
 
 import uasyncio as asyncio
 
-from mainconfig import unset_client_notify_seconds 
+from mainconfig import unset_client_notify_seconds
 
 import gc
 
@@ -61,7 +61,7 @@ class Screen:
                 if result:
                     self.draw()
                     await asyncio.sleep_ms(200)
-            await asyncio.sleep_ms(50)
+            await asyncio.sleep_ms(100)
 
     def handle_touch(self, x, y):
         """Delegates touch handling to error_button,
@@ -93,7 +93,7 @@ class Screen:
                     else:
                         self.makhina_control.stop_assertion()
                     print("[SCREEN] current_error", self.current_error)
-                await asyncio.sleep_ms(100)
+                await asyncio.sleep_ms(200)
             await asyncio.sleep_ms(300)
 
     async def skip_errors(self):
@@ -112,7 +112,7 @@ class Screen:
                         self.makhina_control.assertion_client()
                         self.set_status_error(self.makhina_control.errors[self.current_error].code)
                     self.draw()
-                await asyncio.sleep_ms(100)
+                await asyncio.sleep_ms(200)
             await asyncio.sleep_ms(300)
 
     async def unset_notify_client(self):
