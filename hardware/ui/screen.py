@@ -6,6 +6,8 @@ from ui.utils import colors
 
 import uasyncio as asyncio
 
+from mainconfig import unset_client_notify_seconds 
+
 import gc
 
 class Screen:
@@ -118,7 +120,7 @@ class Screen:
         while True:
             for e in self.makhina_control.errors:
                 e.notify_client = False
-            await asyncio.sleep_ms(1 * 10 * 1000)
+            await asyncio.sleep_ms(unset_client_notify_seconds * 1000)
 
     def get_next_error(self):
         for i in range(len(self.makhina_control.errors)):
