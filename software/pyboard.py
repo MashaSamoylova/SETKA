@@ -34,14 +34,15 @@ class PyBoard():
     t2 = list("000.0")
     p1 = list("000.0")
     p2 = list("000.0")
-    buffer_string = [-1 for x in range(100)]
+    buff_len = 122
     recieved_file = None
     current_download = 0
     chosen_log_name = list('0'*10)
     error_status = 0
+    last_operation = 0
 
     def __init__(self):
-        pass
+        self.buffer_string = [-1 for x in range(self.buff_len)]
 
     def on_connected(self, slave_id, function_code, address, value):
         if value == 1:
@@ -51,7 +52,7 @@ class PyBoard():
 
     def build_server(self):
         self.server.route_map.add_rule(self.on_read_reg, [5], [3], list(range(256)))
-        self.server.route_map.add_rule(self.on_write_reg, [5], [16], list(range(256)))
+        self.server.route_map.add_rule(self.on_write_reg, [5], [16], list(range(100 + self.buff_len + 1)))
         self.server.route_map.add_rule(self.on_write_single_reg, [5], [6], list(range(256)))
 
     def on_read_reg(self, slave_id, function_code, address):
@@ -101,12 +102,12 @@ class PyBoard():
             self.p2[address % 5] = chr(value)
         if address in list(range(50, 70)):
             self.config_value[address - 50] = chr(value)
-        if address >= 100 and address <= 256:
+        if address >= 100 and address < 100 + self.buff_len:
             self.buffer_string[address - 100] = value
 
     def flush_buffer(self):
         local_buffer = [x for x in self.buffer_string if x != -1]
-        self.buffer_string = [-1 for x in range(100)]
+        self.buffer_string = [-1 for x in range(self.buff_len)]
         return local_buffer
 
     def recieve_logs_list(self):
@@ -151,13 +152,18 @@ class PyBoard():
                 try:
                     self.server.serve_once()
                 except Exception as e:
-                    if e: print(e)
+                    print(e)
                 if self.recieve_flag > 0:
                     self.recieved_file += self.flush_buffer()
                     print("FILE", self.recieved_file)
                 if self.recieve_flag == 2:
                     self.cmd = 0
                     self.recieve_flag = -1
+                    self.last_operation = 1
+                elif self.recieve_flag == 3:
+                    self.cmd = 0
+                    self.recieve_flag = -1
+                    self.last_operation = 0
                 else:
                     self.recieve_flag = 0
                     self.current_download += 1

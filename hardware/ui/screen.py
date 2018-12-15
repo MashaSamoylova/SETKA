@@ -59,7 +59,7 @@ class Screen:
                 if result:
                     self.draw()
                     await asyncio.sleep_ms(200)
-            await asyncio.sleep_ms(50)
+            await asyncio.sleep_ms(100)
 
     def handle_touch(self, x, y):
         """Delegates touch handling to error_button,
@@ -87,7 +87,7 @@ class Screen:
                         self.draw()
                         self.current_error = i
                     print("[SCREEN] current_error", self.current_error)
-                await asyncio.sleep_ms(100)
+                await asyncio.sleep_ms(200)
             await asyncio.sleep_ms(300)
 
     async def skip_errors(self):
@@ -104,7 +104,7 @@ class Screen:
                     else:
                         self.set_status_error(self.makhina_control.errors[self.current_error].code)
                     self.draw()
-                await asyncio.sleep_ms(100)
+                await asyncio.sleep_ms(200)
             await asyncio.sleep_ms(300)
 
     async def unset_notify_client(self):
@@ -122,7 +122,7 @@ class Screen:
 
     def set_status_error(self, code):
         codes = {
-                1 : "Перегрев",
+                1 : "t. расплава",
                 2 : "↑давление",
                 3 : "↓ур.сырья",
                 4 : "Обрыв.рук.",

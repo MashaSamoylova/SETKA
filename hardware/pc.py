@@ -91,19 +91,22 @@ class Computer:
                 self.connected = False
         else:
             res = None
-            if not cmd:
-                res = await self.send_sets_request()
-            if cmd == 3:
-                res = await self.send_recipe(arg)
-            if cmd == 4:
-                res = await self.get_save_recipe(arg)
-            if cmd == 5:
-                res = await self.send_logs_list()
-            if cmd == 6:
-                res = await self.send_log()
-            if cmd == 7:
-                res = await self.send_existing_configs()
-            if cmd and cmd not in [5, 6, 7]: await self.clear_command()
+            try:
+                if not cmd:
+                    res = await self.send_sets_request()
+                if cmd == 3:
+                    res = await self.send_recipe(arg)
+                if cmd == 4:
+                    res = await self.get_save_recipe(arg)
+                if cmd == 5:
+                    res = await self.send_logs_list()
+                if cmd == 6:
+                    res = await self.send_log()
+                if cmd == 7:
+                    res = await self.send_existing_configs()
+                if cmd and cmd not in [5, 6, 7]: await self.clear_command()
+            except Exception as e:
+                print('Exception while executing {cmd}th command:'.format(cmd=cmd), e)
             return res
 
     async def try_connect(self):

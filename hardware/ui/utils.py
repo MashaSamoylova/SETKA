@@ -20,13 +20,44 @@ def count_time_diff(t1, t2):
 def chunkstring(string, length):
     return (string[i:length+i] for i in range(0, len(string), length))
 
+def zip_longest(*args, fillvalue=None):
+    iterators = [iter(it) for it in args]
+    num_active = len(iterators)
+    if not num_active:
+        return
+    while True:
+        values = []
+        for i, it in enumerate(iterators):
+            try:
+                value = next(it)
+            except StopIteration:
+                num_active -= 1
+                if not num_active:
+                    return
+                iterators[i] = repeat(fillvalue)
+                value = fillvalue
+            values.append(value)
+        yield tuple(values)
+
+def grouper(iterable, n, fillvalue=None):
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
+
+def islice_first(iterable, n):
+    first_n = list()
+    try:
+        for _ in range(n):
+            first_n.append(next(iterable))
+    except StopIteration:
+        pass
+    return first_n
+
+def bytefile(f):
+    b = f.read(1)
+    while b:
+        yield b
+        b = ord(f.read(1))
+
 def file_iter(filename):
-    fd = open(filename)
-    buf = []
-    for i, line in enumerate(fd):
-        buf.append(line)
-        if not i % 10:
-            yield from (ord(x) for y in buf for x in y)
-            buf.clear()
-    if buf:
-        yield from (ord(x) for y in buf for x in y)
+    with open(filename, 'rb') as fd:
+        yield from bytefile(fd)
