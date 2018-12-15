@@ -9,8 +9,11 @@ class Tab2:
 
     def __init__(self, lcd, control):
         self.control = control
-        self.strings = [Label(lcd, 45, 30 + i * 25, "000.0",
-                              fg=colors['green' if i // 2 else 'red']) for i in range(4)]
+        self.l1 = Label(lcd, 45, 30, "000.0", fg=colors["orange"])
+        self.l2 = Label(lcd, 45, 55, "000.0", fg=colors["red"])
+        self.l3 = Label(lcd, 45, 80, "000.0", fg=colors["purple"])
+        self.l4 = Label(lcd, 45, 105, "000.0", fg=colors["green"])
+        self.strings = [self.l1, self.l2, self.l3, self.l4] 
         loop = asyncio.get_event_loop()
         loop.create_task(self.on_tick())
 
