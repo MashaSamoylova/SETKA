@@ -11,7 +11,7 @@ class Tab2:
         self.control = control
         self.l1 = Label(lcd, 45, 30, "000.0", fg=colors["orange"])
         self.l2 = Label(lcd, 45, 55, "000.0", fg=colors["red"])
-        self.l3 = Label(lcd, 45, 80, "000.0", fg=colors["purple"])
+        self.l3 = Label(lcd, 45, 80, "000.0", fg=colors["light_green"])
         self.l4 = Label(lcd, 45, 105, "000.0", fg=colors["green"])
         self.strings = [self.l1, self.l2, self.l3, self.l4] 
         loop = asyncio.get_event_loop()

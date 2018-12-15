@@ -4,7 +4,8 @@ colors = {
     "red" : (232, 16, 16),
     "green" : (16, 232, 16),
     "orange": (252, 139, 10),
-    "purple" : (151, 15, 242)
+    "purple" : (151, 15, 242),
+    "light_green": (108, 191, 98)
 }
 
 def zfill(s, width):

@@ -128,11 +128,10 @@ class Screen:
 
     def set_status_error(self, code):
         codes = {
-                1 : "Температура",
+                1 : "  t°,стоп",
                 2 : "↑давление",
                 3 : "↓ур.сырья",
                 4 : "Обрыв.рук.",
-                5 : "↑толщина.сетки",
                 6 : "Останов",
                 }
         self.makhina_control.current_error = code
