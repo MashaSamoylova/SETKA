@@ -5,7 +5,7 @@ import uasyncio as asyncio
 
 from mainconfig import up_button_pin, down_button_pin,\
                        right_button_pin, start_button_pin, stop_button_pin,\
-                       max_pressure, level_material_pin, break_arm_pin,\
+                       max_pressure, level_material_pin, break_arm_pin, assertion_pin,\
                        emergency_stop_pin, high_temperature_pin, log_length,\
                        max_extruder_round, max_first_head_round,\
                        max_second_head_round, max_reciver_round 
@@ -42,6 +42,8 @@ class MakhinaControl:
         self.break_arm = machine.Pin(break_arm_pin, machine.Pin.IN, machine.Pin.PULL_UP)
         self.emergency_stop = machine.Pin(emergency_stop_pin, machine.Pin.IN, machine.Pin.PULL_UP)
         self.high_temperature = machine.Pin(high_temperature_pin, machine.Pin.IN, machine.Pin.PULL_UP)
+        self.assertion = machine.Pin(assertion_pin, machine.Pin.OUT)
+        self.assertion.value(0)
 
         self.start_button.handler = self.start
         self.stop_button.handler = self.stop
@@ -113,6 +115,14 @@ class MakhinaControl:
     def stop(self):
         self.makhina.stop()
 
+    def assertion_client(self):
+        print("ASERTION")
+        self.assertion.value(1)
+
+    def stop_assertion(self):
+        print("STOP ASERTION")
+        self.assertion.value(0)
+
     def check_max(self):
         print("check max")
         if float(self.extrudo_speed) > max_extruder_round:
@@ -162,7 +172,7 @@ class MakhinaControl:
 ###########################################
     def hot_melt_check(self):
         if not self.high_temperature.value():
-            return True
+            return False
         return False
 
     def hot_melt_primary_handler(self):
@@ -189,7 +199,6 @@ class MakhinaControl:
     def skip_high_pressure(self):
         if (float(self.p1) <= max_pressure or float(self.p2) <= max_pressure) and self.high_pressure_error.notify_client:
             self.high_pressure_error.notify_client = False
-            print("SUKA BLIT")
             return True
         return False
 
@@ -214,7 +223,7 @@ class MakhinaControl:
 ############################################
     def break_arm_check(self):
         if not self.break_arm.value() and not self.break_arm_error.notify_client:
-            return True
+            return False
         return False
 
     def break_arm_primary_nandler(self):
@@ -254,7 +263,7 @@ class MakhinaControl:
 #############################################
     def emergency_stop_check(self):
         if not self.emergency_stop.value():
-            return True
+            return False
         return False
 
     def emergency_stop_primary_handler(self):

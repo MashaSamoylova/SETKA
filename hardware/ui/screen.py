@@ -82,10 +82,14 @@ class Screen:
                 if not self.makhina_control.errors[i].active and self.makhina_control.errors[i].check():
                     self.makhina_control.errors[i].primary_handler()
                     self.makhina_control.errors[i].active = True
+                    self.makhina_control.assertion_client()
                     if self.current_error == -1:
                         self.set_status_error(self.makhina_control.errors[i].code)
                         self.draw()
                         self.current_error = i
+                        self.makhina_control.assertion_client()
+                    else:
+                        self.makhina_control.stop_assertion()
                     print("[SCREEN] current_error", self.current_error)
                 await asyncio.sleep_ms(100)
             await asyncio.sleep_ms(300)
@@ -100,8 +104,10 @@ class Screen:
                     print("[SCREEN] NEW CURRENT ERROR AFTER SKIP", self.current_error)
                     if self.current_error == -1:
                         self.error_button.clear()
+                        self.makhina_control.stop_assertion()
                         self.status_error = False
                     else:
+                        self.makhina_control.assertion_client()
                         self.set_status_error(self.makhina_control.errors[self.current_error].code)
                     self.draw()
                 await asyncio.sleep_ms(100)
@@ -122,7 +128,7 @@ class Screen:
 
     def set_status_error(self, code):
         codes = {
-                1 : "Перегрев",
+                1 : "Температура",
                 2 : "↑давление",
                 3 : "↓ур.сырья",
                 4 : "Обрыв.рук.",

@@ -19,7 +19,13 @@ class Tab3:
     def __init__(self, lcd, makhina_control):
         self.config_string = EditableButton(lcd, 75, 50, 128, 17, makhina_control.config)
         self.time_string = EditableButton(lcd, 30, 80, 128, 17, "00:00:00")
+        self.time_string.plus = self.plus_handler_time
+        self.time_string.minus = self.minus_handler_time
         self.date_string = EditableButton(lcd, 5, 100, 128, 17, "00:00:00")
+        self.date_string.char_editing = 2
+        self.date_string.plus = self.plus_handler_date
+        self.date_string.minus = self.minus_handler_date
+        self.date_string.right = self.right_handler_date
 
         self.settings_buttons = [self.config_string, self.time_string, self.date_string]
         self.analog_buttons = [makhina_control.plus_button,
@@ -31,10 +37,12 @@ class Tab3:
         self.time_string.font_size = 1
         self.date_string.font_size = 1
 
-        self.change_button = Button(lcd, 0, 125, 128, 30, "Change")
+        self.change_button = Button(lcd, 0, 125, 128, 30, "Изменить")
+        self.change_button.text_position_x = 30
 
-        self.ok_button = Button(lcd, 0, 125, 64, 30, "Ok")
-        self.cancel_button = Button(lcd, 64, 125, 64, 30, "Cnl")
+        self.ok_button = Button(lcd, 0, 125, 64, 30, "Ок")
+        self.cancel_button = Button(lcd, 64, 125, 64, 30, "Отм")
+        self.cancel_button.text_position_x = 75
 
         self.change_button.handler = self.change_handler
         self.ok_button.handler = self.ok_handler
@@ -120,7 +128,77 @@ class Tab3:
 
     def plus_handler(self):
         self.settings_buttons[self.cur_button - 1].plus()
-    
+
+    def plus_handler_time(self):
+        if self.time_string.char_editing == 0:
+            new_digit = (int(self.time_string.text[0])+1)%3
+            self.time_string.text = str(new_digit) + self.time_string.text[1:]
+        elif self.time_string.char_editing == 3:
+            new_digit = (int(self.time_string.text[3])+1)%6
+            self.time_string.text = self.time_string.text[:3] + str(new_digit) + self.time_string.text[4:]
+        elif self.time_string.char_editing == 6:
+            new_digit = (int(self.time_string.text[6])+1)%6
+            self.time_string.text = self.time_string.text[:6] + str(new_digit) + self.time_string.text[7:]
+        else:
+            new_digit = (int(self.time_string.text[self.time_string.char_editing]) + 1)%10
+            self.time_string.text = self.time_string.text[:self.time_string.char_editing] + str(new_digit)\
+                        + self.time_string.text[self.time_string.char_editing + 1:]
+
+        self.time_string.draw_normal()
+
+
+    def minus_handler_time(self):
+        if self.time_string.char_editing == 0:
+            new_digit = (int(self.time_string.text[0])-1)%3
+            self.time_string.text = str(new_digit) + self.time_string.text[1:]
+        elif self.time_string.char_editing == 3:
+            new_digit = (int(self.time_string.text[3])-1)%6
+            self.time_string.text = self.time_string.text[:3] + str(new_digit) + self.time_string.text[4:]
+        elif self.time_string.char_editing == 6:
+            new_digit = (int(self.time_string.text[6])-1)%6
+            self.time_string.text = self.time_string.text[:6] + str(new_digit) + self.time_string.text[7:]
+        else:
+            new_digit = (int(self.time_string.text[self.time_string.char_editing]) - 1)%10
+            self.time_string.text = self.time_string.text[:self.time_string.char_editing] + str(new_digit)\
+                        + self.time_string.text[self.time_string.char_editing + 1:]
+
+        self.time_string.draw_normal()
+
+    def plus_handler_date(self):
+        if self.date_string.char_editing == 5:
+            new_digit = (int(self.date_string.text[5])+1)%2
+            self.date_string.text = self.date_string.text[:5] + str(new_digit) + self.date_string.text[6:]
+        elif self.date_string.char_editing == 8:
+            new_digit = (int(self.date_string.text[8])+1)%4
+            self.date_string.text = self.date_string.text[:8] + str(new_digit) + self.date_string.text[9:]
+        else:
+            new_digit = (int(self.date_string.text[self.date_string.char_editing]) + 1)%10
+            self.date_string.text = self.date_string.text[:self.date_string.char_editing] + str(new_digit)\
+                        + self.date_string.text[self.date_string.char_editing + 1:]
+
+    def minus_handler_date(self):
+        if self.date_string.char_editing == 5:
+            new_digit = (int(self.date_string.text[5])-1)%2
+            self.date_string.text = self.date_string.text[:5] + str(new_digit) + self.date_string.text[6:]
+        elif self.date_string.char_editing == 8:
+            new_digit = (int(self.date_string.text[8])-1)%4
+            self.date_string.text = self.date_string.text[:8] + str(new_digit) + self.date_string.text[9:]
+        else:
+            new_digit = (int(self.date_string.text[self.date_string.char_editing]) - 1)%10
+            self.date_string.text = self.date_string.text[:self.date_string.char_editing] + str(new_digit)\
+                        + self.date_string.text[self.date_string.char_editing + 1:]
+
+        self.date_string.draw_normal()
+
+    def right_handler_date(self):
+        print("RIGHT HANDLER DATA")
+        next_index = (self.date_string.char_editing + 1) % len(self.date_string.text)
+        self.date_string.char_editing += 1 if self.date_string.text[next_index] in '0123456789' else 2
+        self.date_string.char_editing %= len(self.date_string.text)
+        if self.date_string.char_editing < 2:
+            self.date_string.char_editing = 2
+        self.date_string.draw_normal()
+
     def minus_handler(self):
         self.settings_buttons[self.cur_button - 1].minus()
 
@@ -134,7 +212,7 @@ class Tab3:
                 if result:
                     self.toggle_button_highlight(i)
                     return result
-            for button in[self.config_string, self.ok_button, self.cancel_button]:
+            for button in[self.ok_button, self.cancel_button]:
                 result = button.handle_touch(x, y)
                 if result: return result
         else:

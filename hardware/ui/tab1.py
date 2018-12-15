@@ -30,10 +30,12 @@ class Tab1:
             anal_butt.enabled = False
 
 
-        self.change_button = Button(lcd, 0, 125, 128, 30, "Change")
+        self.change_button = Button(lcd, 0, 125, 128, 30, "Изменить")
+        self.change_button.text_position_x = 30
 
-        self.ok_button = Button(lcd, 0, 125, 64, 30, "Ok")
-        self.cancel_button = Button(lcd, 64, 125, 64, 30, "Cnl")
+        self.ok_button = Button(lcd, 0, 125, 64, 30, "Ок")
+        self.cancel_button = Button(lcd, 64, 125, 64, 30, "Отм")
+        self.cancel_button.text_position_x = 75
 
         self.change_button.handler = self.change_handler
         self.ok_button.handler = self.ok_handler

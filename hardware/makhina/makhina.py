@@ -35,7 +35,6 @@ class Makhina:
         self.enablePulseReceiver.value(0)
         for engine in self.engines:
             engine.accel_status = True
-        print("ALOALOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
 
     def stop(self):
         self.wip = False
@@ -73,5 +72,4 @@ class Owen:
                 else:
                     new_nums.append(new_num)
         if len(new_nums) == 4:
-            print("OWEN nums", new_nums)
             self.control.log_new_data(new_nums)
