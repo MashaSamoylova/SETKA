@@ -33,9 +33,9 @@ class ModbusMaster:
         if not chunk: return 0
         success = False
         tries = 0
-        while:
+        while success:
             try:
-                await self.connection.write_multiple_registers(5, self.buffer_start, chunk)
+                success = await self.connection.write_multiple_registers(5, self.buffer_start, chunk)
             except Exception as e:
                 print(e)
                 if tries > max_tries:

@@ -45,7 +45,7 @@ without_compress:
 	cp mainconfig.py ./_build
 	cp pc.py ./_build
 	cp server.py ./_build
-	cp -r ./_build/* /media/roman/ARIGATO
+	cp -r ./_build/* /media/${USER}/ARIGATO
 
 clean:
 	rm -r _build
