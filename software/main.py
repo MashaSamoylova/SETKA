@@ -130,12 +130,12 @@ class SETKAapp(Ui_MainWindow):
             dlg.exec_()
         
     def on_open_editor(self):
-        """if not pyboard.connected:
+        if not pyboard.connected:
             QtWidgets.QMessageBox.warning(self.MainWindow, "Ошибка",
                                 "PyBoard не подключен, используйте Меню->Покдлючить PyBoard")
-        else:"""
-        dlg = EditorDialog()
-        dlg.exec_()
+        else:
+            dlg = EditorDialog()
+            dlg.exec_()
 
     def on_open_settings(self):
         dlg = SettingsDialog()
@@ -147,30 +147,34 @@ class SETKAapp(Ui_MainWindow):
         sys.exit(self.app.exec_())
 
     def plot_graphics(self, data):
-        ticks = [':'.join(chunkstring(x[0], 2)) for x in data]
-        print(data)
-        print(ticks)
-        int_time = list(range(len(data)))
-        temp1 = [float(x[1]) for x in data] 
-        temp2 = [float(x[2]) for x in data] 
-        press1 = [float(x[3]) for x in data] 
-        press2 = [float(x[4]) for x in data]
-        temp_ticks_func = lambda x, pos: ticks[pos]
-        press_ticks_func = lambda x, pos: ticks[pos]
-        self.temp_graph.axis.xaxis.set_major_formatter(FuncFormatter(temp_ticks_func))
-        self.press_graph.axis.xaxis.set_major_formatter(FuncFormatter(press_ticks_func))
-        for graph in [self.temp_graph, self.press_graph]:
-            graph.clear()
-            graph.ticks = ticks
-            graph.timelen = len(data)
-        self.temp_graph.axis.plot(int_time, temp1, 'C1', label='T1')
-        self.temp_graph.axis.plot(int_time, temp2, 'C3', label='T2')
-        self.temp_graph.axis.legend()
-        self.press_graph.axis.plot(int_time, press1, 'C4', label='P1')
-        self.press_graph.axis.plot(int_time, press2, 'C2', label='P2')
-        self.press_graph.axis.legend()
-        self.temp_graph.canvas.draw()
-        self.press_graph.canvas.draw()
+        try:
+            ticks = [':'.join(chunkstring(x[0], 2)) for x in data]
+            print(data)
+            print(ticks)
+            int_time = list(range(len(data)))
+            temp1 = [float(x[1]) for x in data] 
+            temp2 = [float(x[2]) for x in data] 
+            press1 = [float(x[3]) for x in data] 
+            press2 = [float(x[4]) for x in data]
+            temp_ticks_func = lambda x, pos: ticks[pos]
+            press_ticks_func = lambda x, pos: ticks[pos]
+            self.temp_graph.axis.xaxis.set_major_formatter(FuncFormatter(temp_ticks_func))
+            self.press_graph.axis.xaxis.set_major_formatter(FuncFormatter(press_ticks_func))
+            for graph in [self.temp_graph, self.press_graph]:
+                graph.clear()
+                graph.ticks = ticks
+                graph.timelen = len(data)
+            self.temp_graph.axis.plot(int_time, temp1, 'C1', label='T1')
+            self.temp_graph.axis.plot(int_time, temp2, 'C3', label='T2')
+            self.temp_graph.axis.legend()
+            self.press_graph.axis.plot(int_time, press1, 'C4', label='P1')
+            self.press_graph.axis.plot(int_time, press2, 'C2', label='P2')
+            self.press_graph.axis.legend()
+            self.temp_graph.canvas.draw()
+            self.press_graph.canvas.draw()
+        except:
+            QtWidgets.QMessageBox.warning(self.MainWindow, "Ошибка",
+                                "Лог-файл поврежден!")
 
 
 class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
@@ -249,7 +253,10 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
     def on_file_downloaded(self):
         file_raw = ''.join([chr(x) for x in pyboard.recieved_file])
         self.open_butt.setEnabled(True)
-        data = [[x[:4]] + list(chunkstring(x[4:], 5)) for x in file_raw.split('\n') if len(x) == 24]
+        try:
+            data = [[x[:4]] + list(chunkstring(x[4:], 5)) for x in file_raw.split('\n') if len(x) == 24]
+        except:
+            data = 'Incorrect data'
         print("GRAFIC data", data)
         app.plot_graphics(data)
 

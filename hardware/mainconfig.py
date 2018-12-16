@@ -18,13 +18,17 @@ reciever_enable_pin = 'Y6'
 
 uart_pin = 6
 uart_ctrl_pin = 'Y4'
-level_material_pin = "Y6"
 
-high_temperature_pin = "Y6"
-break_arm_pin = "Y6"
-emergency_stop_pin = "Y6"
+# Пины датчиков ошибок
+level_material_pin = "Y" # низкий уровень сырья
+break_arm_pin = "X7" # обрыв рукава
+emergency_stop_pin = "X8" # аварийный останов
+high_temperature_pin = "X5" # перегрев расплава
 
-assertion_pin = "Y8"
+
+# Пин сигнализации
+
+assertion_pin = "Y11"
 
 #=======================================
 
