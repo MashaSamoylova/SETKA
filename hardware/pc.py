@@ -66,6 +66,7 @@ class Computer:
             self.control.t2,
             self.control.p1,
             self.control.p2]))
+        await asyncio.sleep_ms(10)
         res2 = await self.server.connection.write_single_register(slave_addr, 98, self.control.current_error + 1)
         return res and res2
 
