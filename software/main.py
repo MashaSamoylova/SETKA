@@ -80,6 +80,7 @@ class SETKAapp(Ui_MainWindow):
         self.press_graph = MatplotlibWidget(self.MainWindow)
         self.temp_scroll.setWidget(self.temp_graph)
         self.press_scroll.setWidget(self.press_graph)
+        '''
         import random
         r_data = []
         cur_time = 0
@@ -89,6 +90,7 @@ class SETKAapp(Ui_MainWindow):
             cur_time += random.randint(1, 3)
             cur_temp += random.randint(5, 30) - 15
         self.plot_graphics(r_data)
+        '''
         self.connect_slots()
         self.datetime = QtCore.QDateTime.currentDateTime()
         timer = QtCore.QTimer(self.app)
@@ -442,7 +444,7 @@ class ConnectDialog(QtWidgets.QDialog, Ui_ConnectDialog):
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
         self.connect_butt.clicked.connect(self.on_connect)
-        self.port_edit.setText('/dev/ttyUSB0')
+        self.port_edit.setText('COM1')
         self.connect_finished_signal.connect(self.on_connected)
 
     def log(self, text):
