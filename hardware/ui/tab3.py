@@ -113,6 +113,7 @@ class Tab3:
     async def timer(self):
         while True:
             self.update_time()
+            self.config_string.text = self.makhina_control.config
             await asyncio.sleep_ms(1000)
 
     def update_time(self):

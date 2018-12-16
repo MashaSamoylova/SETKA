@@ -57,10 +57,16 @@ def islice_first(iterable, n):
 
 def bytefile(f):
     b = f.read(1)
-    while b:
-        yield b
-        b = ord(f.read(1))
+    while len(b):
+        yield ord(b)
+        b = f.read(1)
 
 def file_iter(filename):
-    with open(filename, 'rb') as fd:
+    with open(filename, 'r') as fd:
         yield from bytefile(fd)
+
+def file_len(filename):
+    with open(filename) as fd:
+        length = 0
+        for b in bytefile(fd): length += 1
+    return length

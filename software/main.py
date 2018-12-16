@@ -18,13 +18,23 @@ from windows.connectdialog import Ui_Dialog as Ui_ConnectDialog
 from windows.graphicsdialog import Ui_GraphicsDialog
 from pyboard import PyBoard, error_map
 from utils import to_float, chunkstring
+from about import about_text
+from instruction import instruction_text
+from config import max_extruder_round, max_first_head_round, max_second_head_round, max_reciever_round
 
 pyboard = PyBoard()
+ticks = list()
+
+def tick_func(x, pos):
+    try:
+        return ticks[int(x)]
+    except:
+        return ""
+
 
 class MatplotlibWidget(QtWidgets.QWidget):
 
     timelen = 900
-    ticks = []
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -56,9 +66,8 @@ class MatplotlibWidget(QtWidgets.QWidget):
 
     def update(self, val):
         a, b = val * (self.timelen // 100), (val + 1) * (self.timelen // 100)
-        self.axis.set_xticklabels(self.ticks[a:b])
+        #self.axis.set_xticklabels(self.ticks[a:b])
         self.axis.set_xlim(a, b)
-
 
 class SETKAapp(Ui_MainWindow):
 
@@ -99,7 +108,7 @@ class SETKAapp(Ui_MainWindow):
         self.data_table.item(1, 0).setText(''.join(pyboard.t2) if pyboard.connected else error_string)
         self.data_table.item(2, 0).setText(''.join(pyboard.p1) if pyboard.connected else error_string)
         self.data_table.item(3, 0).setText(''.join(pyboard.p2) if pyboard.connected else error_string)
-        self.misc_table.item(0, 0).setText(''.join(pyboard.config)[:3] if pyboard.connected else error_string)
+        self.misc_table.item(0, 0).setText(''.join(pyboard.config)[2:] if pyboard.connected else error_string)
         self.misc_table.item(1, 0).setText(self.datetime.time().toString() )
         self.misc_table.item(2, 0).setText(self.datetime.date().toString())
         if pyboard.error_status:
@@ -111,11 +120,35 @@ class SETKAapp(Ui_MainWindow):
         slots = [x.triggered for x in [self.connect_pyboard_button,
                                      self.build_graph_button,
                                      self.open_conf_editor_button,
-                                     self.settings_button]]
+                                     self.settings_button,
+                                     self.graph_all,
+                                     self.graph_small,
+                                     self.help_button,
+                                     self.about_button]]
         callbacks = [self.on_connect_button, self.on_build_graph,
-                     self.on_open_editor, self.on_open_settings]
+                     self.on_open_editor, self.on_open_settings,
+                     self.on_graph_all, self.on_graph_small,
+                     self.on_help, self.on_about]
         for slot, callback in zip(slots, callbacks):
             slot.connect(callback)
+
+    def on_graph_all(self):
+        self.temp_graph.sld.setValue(0)
+        self.press_graph.sld.setValue(0)
+        self.temp_graph.axis.set_xlim(0, self.temp_graph.timelen)
+        self.press_graph.axis.set_xlim(0, self.press_graph.timelen)
+        self.temp_graph.redraw()
+        self.press_graph.redraw()
+
+    def on_graph_small(self):
+        self.temp_graph.sld.setValue(0)
+        self.press_graph.sld.setValue(0)
+
+    def on_help(self):
+        QtWidgets.QMessageBox.about(self.MainWindow, "Помощь", instruction_text)
+
+    def on_about(self):
+        QtWidgets.QMessageBox.about(self.MainWindow, "О программе", about_text)
 
     def on_connect_button(self):
             dlg = ConnectDialog()
@@ -147,6 +180,7 @@ class SETKAapp(Ui_MainWindow):
         sys.exit(self.app.exec_())
 
     def plot_graphics(self, data):
+        global ticks
         try:
             ticks = [':'.join(chunkstring(x[0], 2)) for x in data]
             print(data)
@@ -156,13 +190,9 @@ class SETKAapp(Ui_MainWindow):
             temp2 = [float(x[2]) for x in data] 
             press1 = [float(x[3]) for x in data] 
             press2 = [float(x[4]) for x in data]
-            temp_ticks_func = lambda x, pos: ticks[pos]
-            press_ticks_func = lambda x, pos: ticks[pos]
-            self.temp_graph.axis.xaxis.set_major_formatter(FuncFormatter(temp_ticks_func))
-            self.press_graph.axis.xaxis.set_major_formatter(FuncFormatter(press_ticks_func))
             for graph in [self.temp_graph, self.press_graph]:
                 graph.clear()
-                graph.ticks = ticks
+                graph.axis.xaxis.set_major_formatter(FuncFormatter(tick_func))
                 graph.timelen = len(data)
             self.temp_graph.axis.plot(int_time, temp1, 'C1', label='T1')
             self.temp_graph.axis.plot(int_time, temp2, 'C3', label='T2')
@@ -183,6 +213,7 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
     downloading = False
     fetch_finished_signal = QtCore.pyqtSignal(int, name='fetch_finished_signal')
     load_finished_signal = QtCore.pyqtSignal(int, name='load_finished_signal')
+    update_progress_sig = QtCore.pyqtSignal(str, name='update_progress_sig')
 
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
@@ -191,6 +222,7 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
         self.open_butt.clicked.connect(self.on_open)
         self.fetch_finished_signal.connect(self.on_finish_fetching)
         self.load_finished_signal.connect(self.on_file_downloaded)
+        self.update_progress_sig.connect(self.update_status)
         self.start_fetching()
 
     def start_fetching(self):
@@ -207,14 +239,17 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
         self.fetch_finished_signal.emit(1)
 
     def on_finish_fetching(self):
-        self.update_status('Выберите файл')
-        files_raw = ''.join([chr(x) for x in pyboard.recieved_file])
-        if files_raw != 'no':
-            files = ['.'.join(chunkstring(x, 2)) for x in chunkstring(files_raw, 10)]
-            print(files)
-            for filename in files:
-                self.files_list.addItem(filename)
-        self.open_butt.setEnabled(True)
+        if pyboard.last_operation:
+            self.update_status('Выберите файл')
+            files_raw = ''.join([chr(x) for x in pyboard.recieved_file])
+            if files_raw != 'no':
+                files = ['.'.join(chunkstring(x, 2)) for x in chunkstring(files_raw, 10)]
+                print(files)
+                for filename in files:
+                    self.files_list.addItem(filename)
+            self.open_butt.setEnabled(True)
+        else:
+            QtWidgets.QMessageBox.error(self, "Ошибка", "Не удалось получить список файлов")
         self.fetching_list = False
 
     def cancel_downloading(self):
@@ -222,6 +257,7 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
             self.fetching_list = False
         if self.downloading:
             self.downloading = False
+        pyboard.recieved_flag = 5
         pyboard.cmd = 0
 
     def closeEvent(self, evnt):
@@ -247,18 +283,29 @@ class GraphicsDialog(QtWidgets.QDialog, Ui_GraphicsDialog):
     def download_file(self, filename):
         pyboard.download_log(filename)
         while pyboard.recieve_flag != -1:
+            if pyboard.params[0] != -1 and pyboard.params[1] != -1:
+                file_len = pyboard.params[0] + pyboard.params[1] << 8
+                self.update_progress_sig.emit('{} out of {} bytes downloaded!'.format(len(pyboard.recieved_file), file_len))
             time.sleep(0.05)
         self.load_finished_signal.emit(1)
 
     def on_file_downloaded(self):
-        file_raw = ''.join([chr(x) for x in pyboard.recieved_file])
-        self.open_butt.setEnabled(True)
-        try:
-            data = [[x[:4]] + list(chunkstring(x[4:], 5)) for x in file_raw.split('\n') if len(x) == 24]
-        except:
-            data = 'Incorrect data'
-        print("GRAFIC data", data)
-        app.plot_graphics(data)
+        if pyboard.last_operation:
+            file_raw = ''.join([chr(x) for x in pyboard.recieved_file])
+            print(file_raw)
+            self.open_butt.setEnabled(True)
+            try:
+                data = [[x[:4]] + list(chunkstring(x[4:], 5)) for x in file_raw.split('\n') if len(x) == 24]
+            except:
+                print('DATA INCORRECT')
+                QtWidgets.QMessageBox.error(self, "Ошибка", "Файл поврежден!")
+            else:
+                print("GRAFIC data", data)
+                app.plot_graphics(data)
+                self.close()
+        else:
+            QtWidgets.QMessageBox.error(self, "Ошибка", "Не удалось получить список файлов")
+
 
 class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
 
@@ -273,6 +320,8 @@ class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
         self.save_button.clicked.connect(self.on_save)
         self.open_button.clicked.connect(self.on_load)
         self.recipes_list.itemClicked.connect(self.on_list_click)
+        self.fill_speeds([''.join(x) for x in [pyboard.extruder_speed, pyboard.first_head_speed,
+                                               pyboard.second_head_speed, pyboard.reciever_speed]])
         self.save_button.setEnabled(False)
         self.open_button.setEnabled(False)
         self.download_existing()
@@ -344,16 +393,21 @@ class EditorDialog(QtWidgets.QDialog, Ui_EditorDialog):
         except:
             QtWidgets.QMessageBox.warning(self, "Ошибка", "Некорректный формат!")
         else:
-            self.open_button.setEnabled(False)
-            self.save_button.setEnabled(False)
-            self.warn('Загружаем в PyBoard')
-            pyboard.config_value = [x for i in speeds for x in i]
-            print('Config value is ', pyboard.config_value)
-            pyboard.arg = int(self.choosen_file())
-            pyboard.cmd = 4
-            save_thread = threading.Thread(target=self.wait_for_save)
-            save_thread.daemon = True
-            save_thread.start()
+            print(speeds)
+            if any([float(speeds[0]) > max_extruder_round, float(speeds[1]) > max_first_head_round,
+                    float(speeds[2]) > max_second_head_round, float(speeds[3]) > max_reciever_round]):
+                QtWidgets.QMessageBox.warning(self, "Ошибка", "Превышены ограничения!")
+            else:
+                self.open_button.setEnabled(False)
+                self.save_button.setEnabled(False)
+                self.warn('Загружаем в PyBoard')
+                pyboard.config_value = [x for i in speeds for x in i]
+                print('Config value is ', pyboard.config_value)
+                pyboard.arg = int(self.choosen_file())
+                pyboard.cmd = 4
+                save_thread = threading.Thread(target=self.wait_for_save)
+                save_thread.daemon = True
+                save_thread.start()
 
     def on_load_finished(self, status):
         self.open_button.setEnabled(True)

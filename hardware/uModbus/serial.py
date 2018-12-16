@@ -72,7 +72,7 @@ class Serial:
 
         crc = self._calculate_crc16(serial_pdu)
         serial_pdu.extend(crc)
-
+        #print('SERIAL_PDU', serial_pdu)
         # flush the Rx FIFO
         if self._uart.any():
             self._uart.read()

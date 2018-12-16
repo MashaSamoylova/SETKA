@@ -17,16 +17,35 @@ class Computer:
         recipe = zfill(str(recipe), 3)
         print('sendrecipe', recipe)
         if recipe not in os.listdir('/sd/recipes'):
-            speeds = [0 for _ in range(4)]
+            speeds = [self.control.extrudo_speed,
+                      self.control.first_head_speed,
+                      self.control.second_head_speed,
+                      self.control.reciever_speed]
         else:
             conf_val = open('/sd/recipes/' + recipe).read()
             speeds = chunkstring(conf_val, 5)
-        return await self.server.send_string(slave_addr, 
+        success = False
+        tries = 0
+        while not success:
+            try:
+                success = await self.server.send_string(slave_addr, 
                                      50, "".join(to_float(x) for x in speeds))
+            except Exception as e:
+                tries += 1
+                if tries > 10:
+                    raise e
 
     async def get_save_recipe(self, recipe):
         print('safe recipe')
-        recipe_value = await self.server.get_string(slave_addr, 50, 20)
+        recipe_value = -1
+        tries = 0
+        while recipe_value == -1:
+            try:
+                recipe_value = await self.server.get_string(slave_addr, 50, 20)
+            except Exception as e:
+                tries += 1
+                if tries > 10:
+                    raise e
         print('recipe num is ', recipe)
         print('recipe_value is ', recipe_value)
         recipe_values = chunkstring(recipe_value, 5)
@@ -55,14 +74,14 @@ class Computer:
             gen = (ord(x) for x in 'no')
         else:
             gen = (ord(x) for y in os.listdir('/sd/logs') for x in y if x != '.')
-        return await self.server.send_data(slave_addr, gen)
+        return await self.server.send_data(slave_addr, gen, 0)
 
     async def send_existing_configs(self):
         if not os.listdir('/sd/recipes'):
             gen = (ord(x) for x in 'no')
         else:
             gen = (ord(x) for y in os.listdir('/sd/recipes') for x in y if x != '.')
-        return await self.server.send_data(slave_addr, gen)
+        return await self.server.send_data(slave_addr, gen, 0)
 
     async def send_log(self):
         log_name_raw = await self.server.get_string(slave_addr, 70, 10)
