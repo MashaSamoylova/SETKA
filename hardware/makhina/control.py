@@ -52,10 +52,10 @@ class MakhinaControl:
         self.rtc = RTC()
         print("INIT SPEEDS")
 
-        self.hot_melt_emergancy_error = Error(1)
-        self.hot_melt_emergancy_error.check = self.hot_melt_emergancy_check
-        self.hot_melt_emergancy_error.primary_handler = self.hot_melt_emergancy_primary_handler
-        self.hot_melt_emergancy_error.skip = self.skip_hot_melt_emergency
+        self.hot_melt_error = Error(1)
+        self.hot_melt_error.check = self.hot_melt_check
+        self.hot_melt_error.primary_handler = self.hot_melt_primary_handler
+        self.hot_melt_error.skip = self.skip_hot_melt
 
         self.high_pressure_error = Error(2)
         self.high_pressure_error.check = self.high_pressure_check
@@ -72,11 +72,17 @@ class MakhinaControl:
         self.break_arm_error.primary_handler = self.break_arm_primary_nandler
         self.break_arm_error.skip = self.skip_break_arm
 
+        self.emergency_stop_error = Error(5)
+        self.emergency_stop_error.check = self.emergency_stop_check
+        self.emergency_stop_error.primary_handler = self.emergency_stop_primary_handler
+        self.emergency_stop_error.skip = self.skip_emergency_stop
+
         self.errors = [
-                self.hot_melt_emergancy_error,
+                self.hot_melt_error,
                 self.high_pressure_error,
                 self.low_raw_material_error,
                 self.break_arm_error,
+                self.emergency_stop_error,
                 ]
 
     def start_new_log(self):
@@ -156,18 +162,18 @@ class MakhinaControl:
         self.set_speeds((self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed))
 
 ###########################################
-# HOT MELT AND EMERGENCY STOP
+# HOT MELT
 ###########################################
-    def hot_melt_emergancy_check(self):
-        if not self.high_temperature.value() or self.emergency_stop.value():
+    def hot_melt_check(self):
+        if not self.high_temperature.value():
             return True
         return False
 
-    def hot_melt_emergancy_primary_handler(self):
+    def hot_melt_primary_handler(self):
         self.stop()
 
-    def skip_hot_melt_emergency(self):
-        if self.high_temperature.value() and self.emergency_stop.value() and self.hot_melt_emergancy_error.notify_client:
+    def skip_hot_melt(self):
+        if self.high_temperature.value() and self.hot_melt_error.notify_client:
             self.hot_melt_error.notify_client = False
             return True
         return False
@@ -218,6 +224,22 @@ class MakhinaControl:
 
     def skip_break_arm(self):
         if self.break_arm.value() or self.break_arm_error.notify_client:
+            return True
+        return False
+
+#############################################
+# EMERGENCY STOP
+#############################################
+    def emergency_stop_check(self):
+        if not self.emergency_stop.value():
+            return True
+        return False
+
+    def emergency_stop_primary_handler(self):
+        pass
+
+    def skip_emergency_stop(self):
+        if self.emergency_stop.value() and self.emergency_stop_error.notify_client:
             return True
         return False
 

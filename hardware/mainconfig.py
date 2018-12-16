@@ -24,7 +24,7 @@ high_temperature_pin = "Y6"
 break_arm_pin = "Y6"
 emergency_stop_pin = "Y6"
 
-assertion_pin = "Y6"
+assertion_pin = "Y8"
 
 #=======================================
 
