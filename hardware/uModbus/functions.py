@@ -51,6 +51,7 @@ def write_multiple_coils(starting_address, value_list):
 
 def write_multiple_registers(starting_address, register_values, signed=True):
     quantity = len(register_values)
+    print('HERE', register_values)
 
     if not (1 <= quantity <= 123):
         raise ValueError('invalid number of registers')
