@@ -88,6 +88,7 @@ class ModbusMaster:
                 proceed_result = 2
                 print('Exception while transfering data, ', e)
             self.sending_block = False
+            print('prcoeed_result', proceed_result)
             if not proceed_result:
                 self.sending_offset = -1
                 self.sending_data = None

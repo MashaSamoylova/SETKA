@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 import time
+from datetime import datetime
 
 import serial
 from umodbus import conf
@@ -9,12 +10,11 @@ from umodbus.server.serial.rtu import RTUServer
 from umodbus.utils import log_to_stream
 import os
 
-error_map = ["Перегрев расплава",
+error_map = ["Перегрев расплава/Аварийная остановка",
              "Превышено давление",
              "Низкий уровень сырья",
              "Обрыв рукава",
-             "Превышена толщина сетки",
-             "Аварийная остановка"]
+             "Аварийная остановкаa"]
 
 class PyBoard():
 
@@ -81,6 +81,14 @@ class PyBoard():
         if address >= 90 and address < 96:
             self.params[address - 90] = value
         if address == 98:
+            if self.error_status != value:
+                if self.error_status:
+                    with open('log.txt', 'a') as f:
+                        f.write('{} Вход в состояние ошибки {}: {}'.format(datetime.today().strftime("%Y-%m-%d %H:%M:%S"), value,
+                                                                    error_map[value - 2]) + '\n')
+                else:
+                    with open('log.txt', 'a') as f:
+                        f.write('{} Все ошибки квитированы'.format(datetime.today().strftime("%Y-%m-%d %H:%M:%S")) + '\n')
             self.error_status = value
         if address == 99:
             self.recieve_flag = value
@@ -167,22 +175,23 @@ class PyBoard():
                         self.connected = False
                 else:
                     self.errors_in_a_row = 0
-                    if self.recieve_flag > 0:
-                        self.recieved_file += self.flush_buffer()
-                        print("FILE", self.recieved_file)
-                    if self.recieve_flag == 2:
-                        self.cmd = 0
-                        self.recieve_flag = -1
-                        self.last_operation = 1
-                    elif self.recieve_flag == 3:
-                        self.cmd = 0
-                        self.recieve_flag = -1
-                        self.last_operation = 0
-                    elif self.recieve_flag == 5:
-                        self.cmd = 0
-                        self.recieve_flag = -1
-                        self.last_operation = 0
-                    else:
-                        self.recieve_flag = 0
-                        self.current_download += 1
+                print('recieve', self.recieve_flag)
+                if self.recieve_flag > 0:
+                    self.recieved_file += self.flush_buffer()
+                    print("FILE", self.recieved_file)
+                if self.recieve_flag == 2:
+                    self.cmd = 0
+                    self.recieve_flag = -1
+                    self.last_operation = 1
+                elif self.recieve_flag == 3:
+                    self.cmd = 0
+                    self.recieve_flag = -1
+                    self.last_operation = 0
+                elif self.recieve_flag == 5:
+                    self.cmd = 0
+                    self.recieve_flag = -1
+                    self.last_operation = 0
+                else:
+                    self.recieve_flag = 0
+                    self.current_download += 1
                 time.sleep(0.05)

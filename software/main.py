@@ -122,13 +122,12 @@ class SETKAapp(Ui_MainWindow):
         slots = [x.triggered for x in [self.connect_pyboard_button,
                                      self.build_graph_button,
                                      self.open_conf_editor_button,
-                                     self.settings_button,
                                      self.graph_all,
                                      self.graph_small,
                                      self.help_button,
                                      self.about_button]]
         callbacks = [self.on_connect_button, self.on_build_graph,
-                     self.on_open_editor, self.on_open_settings,
+                     self.on_open_editor,
                      self.on_graph_all, self.on_graph_small,
                      self.on_help, self.on_about]
         for slot, callback in zip(slots, callbacks):
