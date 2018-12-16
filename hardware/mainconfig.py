@@ -1,52 +1,45 @@
 #-------------- PINS ------------------
 #======================================
-# Пины цифровых кнопок
-up_button_pin = 'Y4'
-down_button_pin = 'Y8'
-right_button_pin = 'X11'
-start_button_pin = 'X12'
-stop_button_pin = 'X10'
 
-# lcd соединение
-# см http://docs.micropython.org/en/v1.9.4/pyboard/library/lcd160cr.html#lcd160cr.LCD160CR
-lcd_pins = 'XY'
+up_button_pin = 'Y10'
+down_button_pin = 'Y11'
+right_button_pin = 'Y12'
+start_button_pin = 'Y6'
+stop_button_pin = 'Y6'
+lcd_pins = 'X'
 
-# Пины шаговиков
-extruder_pulse_pin = 'Y3' # экструдер
-first_head_pulse_pin = 'Y12' # ШДГ1
-second_head_pulse_pin = 'Y6' # ШДГ2
-reciever_pulse_pin = 'X9' # Приемка
+extruder_pulse_pin = 'Y6'
+first_head_pulse_pin = 'Y6'
+second_head_pulse_pin = 'Y6'
+reciever_pulse_pin = 'Y6'
 
-# Пины для подачи питания на шаговки
-motors_enable_pin = 'Y5'
-reciever_enable_pin = 'Y7'
+motors_enable_pin = 'Y6'
+reciever_enable_pin = 'Y6'
 
-uart_pin = 6 # номер uart
-uart_ctrl_pin = 'X6' # RSE пин
+uart_pin = 6
+uart_ctrl_pin = 'Y4'
+level_material_pin = "Y6"
 
+high_temperature_pin = "Y6"
+break_arm_pin = "Y6"
+emergency_stop_pin = "Y6"
 
-# Пины датчиков ошибок
-level_material_pin = "X3" # низкий уровень сырья
-break_arm_pin = "X7" # обрыв рукава
-emergency_stop_pin = "X8" # аварийный останов
-high_temperature_pin = "X5" # перегрев расплава
+assertion_pin = "Y8"
 
-
-# Пин сигнализации
-
-assertion_pin = "Y11"
+#=======================================
 
 #--------------Settings-----------------
 #=======================================
-max_pressure = 1000 # Превышение давления вызывает ошибку "Первышено давление"
+max_pressure = 1000
 
 log_length = 15 # minutes
 acceleration_delay = 500 # milliseconds
 
-# ОВЕН
-# Порядок температура1, температура2, давление1, давление2
-owen_inputs = [4, 4, 4, 4] # входы овена
-owen_addres = 16 # адрес овена в сети modbus
+mesh_uart_number = 2
+max_mesh_thickness = 100
+
+owen_inputs = [4,4,4,4]
+owen_addres = 16
 
 # Ограничения оборотов шаговиков
 max_extruder_round = 120.0 # максимальное количество оботов экструдера об/мин

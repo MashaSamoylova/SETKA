@@ -72,12 +72,17 @@ class MakhinaControl:
         self.break_arm_error.primary_handler = self.break_arm_primary_nandler
         self.break_arm_error.skip = self.skip_break_arm
 
+        self.emergency_stop_error = Error(5)
+        self.emergency_stop_error.check = self.emergency_stop_check
+        self.emergency_stop_error.primary_handler = self.emergency_stop_primary_handler
+        self.emergency_stop_error.skip = self.skip_emergency_stop
+
         self.errors = [
                 self.hot_melt_error,
                 self.high_pressure_error,
                 self.low_raw_material_error,
                 self.break_arm_error,
-                self.emergancy_stop,
+                self.emergency_stop_error,
                 ]
 
     def start_new_log(self):
@@ -160,7 +165,7 @@ class MakhinaControl:
 # HOT MELT
 ###########################################
     def hot_melt_check(self):
-        if not self.high_temperature.value() or not self.emergency_stop.value():
+        if not self.high_temperature.value():
             return True
         return False
 
@@ -168,11 +173,8 @@ class MakhinaControl:
         self.stop()
 
     def skip_hot_melt(self):
-        print("HIGHT", self.high_temperature.value())
-        print("EMERGANCY", self.emergency_stop.value())
-        print("CLIENT", self.hot_melt_emergancy_error.notify_client)
-        if self.high_temperature.value() and self.emergency_stop.value() and self.hot_melt_emergancy_error.notify_client:
-            self.hot_melt_emergancy_error.notify_client = False
+        if self.high_temperature.value() and self.hot_melt_error.notify_client:
+            self.hot_melt_error.notify_client = False
             return True
         return False
 
@@ -222,6 +224,22 @@ class MakhinaControl:
 
     def skip_break_arm(self):
         if self.break_arm.value() or self.break_arm_error.notify_client:
+            return True
+        return False
+
+#############################################
+# EMERGENCY STOP
+#############################################
+    def emergency_stop_check(self):
+        if not self.emergency_stop.value():
+            return True
+        return False
+
+    def emergency_stop_primary_handler(self):
+        pass
+
+    def skip_emergency_stop(self):
+        if self.emergency_stop.value() and self.emergency_stop_error.notify_client:
             return True
         return False
 
