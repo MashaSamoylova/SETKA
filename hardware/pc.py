@@ -24,12 +24,17 @@ class Computer:
         else:
             conf_val = open('/sd/recipes/' + recipe).read()
             speeds = chunkstring(conf_val, 5)
+        to_send = ''.join(to_float(x) for x in speeds)
+        print(to_send)
         success = False
         tries = 0
+        if len(to_send) <= 1 or len(to_send) >= 123:
+            await self.clear_command()
+            return 
         while not success:
             try:
                 success = await self.server.send_string(slave_addr, 
-                                     50, "".join(to_float(x) for x in speeds))
+                                     50, to_send)
             except Exception as e:
                 tries += 1
                 if tries > 10:

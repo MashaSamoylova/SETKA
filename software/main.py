@@ -111,8 +111,8 @@ class SETKAapp(Ui_MainWindow):
         self.data_table.item(2, 0).setText(''.join(pyboard.p1) if pyboard.connected else error_string)
         self.data_table.item(3, 0).setText(''.join(pyboard.p2) if pyboard.connected else error_string)
         self.misc_table.item(0, 0).setText(''.join(pyboard.config)[2:] if pyboard.connected else error_string)
-        self.misc_table.item(1, 0).setText(self.datetime.time().toString() )
-        self.misc_table.item(2, 0).setText(self.datetime.date().toString())
+        self.misc_table.item(2, 0).setText(self.datetime.time().toString() )
+        self.misc_table.item(1, 0).setText(self.datetime.date().toString())
         if pyboard.error_status:
             self.misc_table.item(3, 0).setText(error_map[pyboard.error_status - 2] if pyboard.connected else error_string)
         else:
