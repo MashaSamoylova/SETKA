@@ -16,7 +16,7 @@ class Makhina:
 
     def __init__(self):
         self.extrudo_engine = Motor(Timer(10), Pin(extruder_pulse_pin, Pin.OUT), 5000, 1)
-        self.first_head_engine = Motor(Timer(1), Pin(first_head_pulse_pin, Pin.OUT), 18000, 3)
+        self.first_head_engine = Motor(Timer(8), Pin(first_head_pulse_pin, Pin.OUT), 18000, 3)
         self.second_head_engine = Motor(Timer(1), Pin(second_head_pulse_pin, Pin.OUT), 18000, 1)
         self.reciever_engine = Motor(Timer(4), Pin(reciever_pulse_pin, Pin.OUT), 3200, 1)
 

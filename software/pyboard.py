@@ -34,12 +34,14 @@ class PyBoard():
     t2 = list("000.0")
     p1 = list("000.0")
     p2 = list("000.0")
-    buff_len = 122
+    buff_len = 80
     recieved_file = None
     current_download = 0
     chosen_log_name = list('0'*10)
     error_status = 0
     last_operation = 0
+    params = [-1 for i in range(5)]
+    errors_in_a_row = 0
 
     def __init__(self):
         self.buffer_string = [-1 for x in range(self.buff_len)]
@@ -76,6 +78,8 @@ class PyBoard():
             self.arg = value
         if address == 4:
             self.master_arg = value
+        if address >= 90 and address < 96:
+            self.params[address - 90] = value
         if address == 98:
             self.error_status = value
         if address == 99:
@@ -111,18 +115,21 @@ class PyBoard():
         return local_buffer
 
     def recieve_logs_list(self):
+        params = [-1 for i in range(5)]
         self.recieve_flag = 0
         self.recieved_file = list()
         self.current_download = 0
         self.cmd = 5
 
     def download_existing(self):
+        params = [-1 for i in range(5)]
         self.recieve_flag = 0
         self.recieved_file = list()
         self.current_download = 0
         self.cmd = 7
 
     def download_log(self, log_name):
+        params = [-1 for i in range(5)]
         print("log name", log_name)
         self.chosen_log_name = list(log_name.replace('.', ''))
         self.recieved_flag = 0
@@ -151,20 +158,31 @@ class PyBoard():
             if self.connected:
                 try:
                     self.server.serve_once()
+                except ValueError:
+                    pass
                 except Exception as e:
                     print(e)
-                if self.recieve_flag > 0:
-                    self.recieved_file += self.flush_buffer()
-                    print("FILE", self.recieved_file)
-                if self.recieve_flag == 2:
-                    self.cmd = 0
-                    self.recieve_flag = -1
-                    self.last_operation = 1
-                elif self.recieve_flag == 3:
-                    self.cmd = 0
-                    self.recieve_flag = -1
-                    self.last_operation = 0
+                    self.errors_in_a_row += 1
+                    if self.errors_in_a_row > 10:
+                        self.connected = False
                 else:
-                    self.recieve_flag = 0
-                    self.current_download += 1
-            time.sleep(0.05)
+                    self.errors_in_a_row = 0
+                    if self.recieve_flag > 0:
+                        self.recieved_file += self.flush_buffer()
+                        print("FILE", self.recieved_file)
+                    if self.recieve_flag == 2:
+                        self.cmd = 0
+                        self.recieve_flag = -1
+                        self.last_operation = 1
+                    elif self.recieve_flag == 3:
+                        self.cmd = 0
+                        self.recieve_flag = -1
+                        self.last_operation = 0
+                    elif self.recieve_flag == 5:
+                        self.cmd = 0
+                        self.recieve_flag = -1
+                        self.last_operation = 0
+                    else:
+                        self.recieve_flag = 0
+                        self.current_download += 1
+                time.sleep(0.05)

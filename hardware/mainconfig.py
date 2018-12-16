@@ -2,10 +2,10 @@
 #======================================
 
 up_button_pin = 'Y10'
-down_button_pin = 'Y11'
-right_button_pin = 'Y12'
-start_button_pin = 'Y6'
-stop_button_pin = 'Y6'
+down_button_pin = 'Y6'
+right_button_pin = 'Y9'
+start_button_pin = 'Y12'
+stop_button_pin = 'Y11'
 lcd_pins = 'X'
 
 extruder_pulse_pin = 'Y6'
@@ -20,15 +20,15 @@ uart_pin = 6
 uart_ctrl_pin = 'Y4'
 
 # Пины датчиков ошибок
-level_material_pin = "Y" # низкий уровень сырья
-break_arm_pin = "X7" # обрыв рукава
-emergency_stop_pin = "X8" # аварийный останов
-high_temperature_pin = "X5" # перегрев расплава
+level_material_pin = "Y6" # низкий уровень сырья
+break_arm_pin = "Y6" # обрыв рукава
+emergency_stop_pin = "Y6" # аварийный останов
+high_temperature_pin = "Y6" # перегрев расплава
 
 
 # Пин сигнализации
 
-assertion_pin = "Y11"
+assertion_pin = "Y8"
 
 #=======================================
 

@@ -25,11 +25,9 @@ without_compress:
 	touch _build/ui/__init__.py
 	mkdir -p _build/uasyncio
 	mkdir -p _build/makhina
-	mkdir -p _build/recipes
-	mkdir -p _build/logs
 	touch _build/makhina/__init__.py
-	cp boot.py ./_build/boot.py 
-	cp main.py ./_build/main.py
+	cp boot.py ./_build
+	cp main.py ./_build
 	cp ./ui/screen.py ./_build/ui/screen.py  
 	cp ./ui/tab1.py ./_build/ui/tab1.py
 	cp ./ui/tab2.py ./_build/ui/tab2.py
@@ -45,7 +43,7 @@ without_compress:
 	cp mainconfig.py ./_build
 	cp pc.py ./_build
 	cp server.py ./_build
-	cp -r ./_build/* /media/${USER}/ARIGATO
+	cp -R ./_build/* /media/${USER}/ARIGATO
 
 clean:
 	rm -r _build

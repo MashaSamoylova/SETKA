@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from config import max_extruder_round, max_first_head_round, max_second_head_round, max_reciever_round
 
 class Ui_EditorDialog(object):
     def setupUi(self, EditorDialog):
@@ -142,13 +143,13 @@ class Ui_EditorDialog(object):
         EditorDialog.setWindowTitle(_translate("EditorDialog", "Редактор рецептов"))
         self.label.setText(_translate("EditorDialog", "Создать новый / редактировать старый рецепт"))
         self.label_2.setText(_translate("EditorDialog", "Экструдер"))
-        self.label_7.setText(_translate("EditorDialog", "Об./м."))
+        self.label_7.setText(_translate("EditorDialog", "Об./м. MAX - " + str(max_extruder_round)))
         self.label_3.setText(_translate("EditorDialog", "Фильера1"))
-        self.label_8.setText(_translate("EditorDialog", "Об./м."))
+        self.label_8.setText(_translate("EditorDialog", "Об./м. MAX - " + str(max_first_head_round)))
         self.label_4.setText(_translate("EditorDialog", "Фильера2"))
-        self.label_9.setText(_translate("EditorDialog", "Об./м."))
+        self.label_9.setText(_translate("EditorDialog", "Об./м. MAX - " + str(max_second_head_round)))
         self.label_5.setText(_translate("EditorDialog", "Приемка  "))
-        self.label_10.setText(_translate("EditorDialog", "Об./м."))
+        self.label_10.setText(_translate("EditorDialog", "Об./м. MAX - " + str(max_reciever_round)))
         self.label_6.setText(_translate("EditorDialog", "Номер рецепта"))
         self.save_button.setText(_translate("EditorDialog", "Сохранить"))
         self.open_button.setText(_translate("EditorDialog", "Открыть"))

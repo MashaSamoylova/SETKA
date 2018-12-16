@@ -5,7 +5,7 @@ from math import ceil
 import uasyncio as asyncio
 from pc import Computer
 from makhina.makhina import Owen
-from ui.utils import chunkstring, islice_first, file_iter
+from ui.utils import chunkstring, islice_first, file_iter, file_len
 
 
 max_tries = 10
@@ -14,7 +14,7 @@ max_tries = 10
 class ModbusMaster:
 
     buffer_start = 100
-    buffer_len = 122
+    buffer_len = 80
     sending_offset = -1
     sending_data = None
     sending_block = False
@@ -33,7 +33,7 @@ class ModbusMaster:
         if not chunk: return 0
         success = False
         tries = 0
-        while success:
+        while not success:
             try:
                 success = await self.connection.write_multiple_registers(5, self.buffer_start, chunk)
             except Exception as e:
@@ -41,16 +41,22 @@ class ModbusMaster:
                 if tries > max_tries:
                     return 2
                 tries += 1
+        if len(chunk) < self.buffer_len: return 0
         return 1
 
-    async def send_data(self, slave_addr, data):
+    async def send_data(self, slave_addr, data, len_data):
         self.sending_data = iter(data)
         self.sending_block = False
         self.sending_offset = 0
+        c = (len_data >> 8) & 0xff
+        f = len_data & 0xff
+        print('c', c, 'f', f)
+        await self.connection.write_single_register(5, 90, c)
+        await self.connection.write_single_register(5, 91, f)
 
     async def send_file(self, slave_addr, filename):
         print("FILE NAME", filename)
-        return await self.send_data(slave_addr, file_iter('/sd/logs/' + filename))
+        return await self.send_data(slave_addr, file_iter('/sd/logs/' + filename), file_len('/sd/logs/' + filename))
 
     async def send_string(self, slave_addr, starting_address, text):
         try:
@@ -69,7 +75,12 @@ class ModbusMaster:
     async def handle_sending(self):
         recieve_flag = await self.connection.read_holding_registers(5, 99, 1, False)
         recieve_flag = recieve_flag[0]
-        if not recieve_flag:
+        if recieve_flag == 2 or recieve_flag == 0xFF:
+            print('STOP')
+            self.sending_offset = -1
+            self.sending_data = None
+            self.recieve_flag = 2
+        elif not recieve_flag:
             self.sending_block = True
             try:
                 proceed_result = await self.proceed_sending()
@@ -85,8 +96,18 @@ class ModbusMaster:
                 self.sending_offset += 1
                 recieve_flag = 1
             elif proceed_result == 2:
+                self.sending_offset = -1
                 recieve_flag = 3
-            await self.connection.write_single_register(5, 99, recieve_flag)
+            success = False
+            tries = 0
+            try:
+                success = await self.connection.write_single_register(5, 99, recieve_flag)
+            except Exception as e:
+                print(e)
+                if tries > max_tries:
+                    raise e
+                tries += 1
+                
 
     async def serve(self):
         while True:
@@ -99,7 +120,6 @@ class ModbusMaster:
             else:
                 await self.pc.try_connect()
 
-            await asyncio.sleep_ms(10)
             # Handle owen
-            await self.owen.read_owen_data()           
-            await asyncio.sleep_ms(10)
+            await self.owen.read_owen_data()
+            await asyncio.sleep_ms(0)
