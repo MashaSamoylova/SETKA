@@ -101,6 +101,7 @@ class MakhinaControl:
         print("writing in log")
         self.log.write(zfill(str(hours), 2) + zfill(str(minutes), 2)\
                        + ''.join([to_float(x) for x in new_data]) + '\n')
+        self.log.flush()
 
     def start(self):
         self.makhina.start()

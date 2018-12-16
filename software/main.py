@@ -122,17 +122,34 @@ class SETKAapp(Ui_MainWindow):
         slots = [x.triggered for x in [self.connect_pyboard_button,
                                      self.build_graph_button,
                                      self.open_conf_editor_button,
-                                     self.settings_button,
                                      self.graph_all,
                                      self.graph_small,
                                      self.help_button,
                                      self.about_button]]
         callbacks = [self.on_connect_button, self.on_build_graph,
-                     self.on_open_editor, self.on_open_settings,
+                     self.on_open_editor,
                      self.on_graph_all, self.on_graph_small,
                      self.on_help, self.on_about]
         for slot, callback in zip(slots, callbacks):
             slot.connect(callback)
+
+    """def start_new_log(self):
+        if self.log: self.log.close()
+        self.log_time = datetime.strftime("%Y-%m-%d %H:%M:%S")
+        self.log_time = (month, day, hours, minutes, seconds)
+        self.log_name = '.'.join(zfill(str(x), 2) for x in self.log_time)
+        self.log = open('logs/' + self.log_name, 'w')
+
+    def log_new_data(self, new_data):
+        self.t1, self.t2, self.p1, self.p2 = new_data
+        *_, month, day, _, hours, minutes, seconds, _ = self.rtc.datetime()
+        new_time = (month, day, hours, minutes, seconds)
+        if count_time_diff(self.log_time, new_time) // 60 >= log_length:
+            self.start_new_log()
+        print("writing in log")
+        self.log.write(zfill(str(hours), 2) + zfill(str(minutes), 2)\
+                       + ''.join([to_float(x) for x in new_data]) + '\n')
+        self.log.flush()"""
 
     def on_graph_all(self):
         self.temp_graph.sld.setValue(0)
@@ -157,12 +174,19 @@ class SETKAapp(Ui_MainWindow):
             dlg.exec_()
 
     def on_build_graph(self):
-        if not pyboard.connected:
-            QtWidgets.QMessageBox.warning(self.MainWindow, "Ошибка",
-                                "PyBoard не подключен, используйте Меню->Покдлючить PyBoard")
+        graph_file = QtWidgets.QFileDialog.getOpenFileName()[0]
+        if not graph_file: return
+        print(graph_file)
+        file_raw = open(graph_file).read()
+        print(file_raw)
+        try:
+            data = [[x[:4]] + list(chunkstring(x[4:], 5)) for x in file_raw.split('\n') if len(x) == 24]
+        except:
+            print('DATA INCORRECT')
+            QtWidgets.QMessageBox.error(self, "Ошибка", "Файл поврежден!")
         else:
-            dlg = GraphicsDialog()
-            dlg.exec_()
+            print("GRAFIC data", data)
+            self.plot_graphics(data)
         
     def on_open_editor(self):
         if not pyboard.connected:
