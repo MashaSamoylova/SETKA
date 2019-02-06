@@ -52,11 +52,6 @@ class MakhinaControl:
         self.rtc = RTC()
         print("INIT SPEEDS")
 
-        self.hot_melt_error = Error(1)
-        self.hot_melt_error.check = self.hot_melt_check
-        self.hot_melt_error.primary_handler = self.hot_melt_primary_handler
-        self.hot_melt_error.skip = self.skip_hot_melt
-
         self.high_pressure_error = Error(2)
         self.high_pressure_error.check = self.high_pressure_check
         self.high_pressure_error.primary_handler = self.high_pressure_primary_handler
@@ -78,7 +73,6 @@ class MakhinaControl:
         self.emergency_stop_error.skip = self.skip_emergency_stop
 
         self.errors = [
-                self.hot_melt_error,
                 self.high_pressure_error,
                 self.low_raw_material_error,
                 self.break_arm_error,
@@ -161,23 +155,6 @@ class MakhinaControl:
         self.second_head_speed = self.second_head_speed[1:]
         self.reciever_speed = self.reciever_speed[1:]
         self.set_speeds((self.extrudo_speed, self.first_head_speed, self.second_head_speed, self.reciever_speed))
-
-###########################################
-# HOT MELT
-###########################################
-    def hot_melt_check(self):
-        if not self.high_temperature.value():
-            return True
-        return False
-
-    def hot_melt_primary_handler(self):
-        self.stop()
-
-    def skip_hot_melt(self):
-        if self.high_temperature.value() and self.hot_melt_error.notify_client:
-            self.hot_melt_error.notify_client = False
-            return True
-        return False
 
 ###########################################
 # HIGH PRESSURE
