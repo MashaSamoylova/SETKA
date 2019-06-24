@@ -29,6 +29,7 @@ class MakhinaControl:
     second_head_speed = "00.0"
     reciever_speed = "00.0"
     current_error = -1
+    owen_is_broken = False
 
     def __init__(self):
         self.makhina = Makhina()
@@ -90,12 +91,17 @@ class MakhinaControl:
         self.t1, self.t2, self.p1, self.p2 = new_data
         *_, month, day, _, hours, minutes, seconds, _ = self.rtc.datetime()
         new_time = (month, day, hours, minutes, seconds)
+        print("new_time", new_time)
         if count_time_diff(self.log_time, new_time) // 60 >= log_length:
             self.start_new_log()
         print("writing in log")
         self.log.write(zfill(str(hours), 2) + zfill(str(minutes), 2)\
                        + ''.join([to_float(x) for x in new_data]) + '\n')
         self.log.flush()
+
+    def update_data_withput_logging(self, new_data):
+        print("update")
+        self.t1, self.t2, self.p1, self.p2 = new_data
 
     def start(self):
         self.makhina.start()

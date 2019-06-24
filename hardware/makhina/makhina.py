@@ -49,8 +49,8 @@ class Owen:
         self.control = control
 
     async def read_owen_data(self):
-        if not self.control.makhina.wip:
-            return
+        #if not self.control.makhina.wip:
+         #   return
         
         print("read from owen")
         '''new_nums = [random.randint(0, 1000) for _ in range(4)]
@@ -69,8 +69,14 @@ class Owen:
                     new_num = float(str(data)[:-pointer_index] + "." + str(data)[:pointer_index])
                     #new_num = data / 10
                 except Exception as e:
-                     print(e, 'OWEN is broken')
+                    print(e, 'OWEN is broken')
+                    self.control.owen_is_broken = True
                 else:
                     new_nums.append(new_num)
+
         if len(new_nums) == 4:
-            self.control.log_new_data(new_nums)
+            if not self.control.makhina.wip:
+                print(new_nums)
+                self.control.update_data_withput_logging(new_nums)
+            else:
+                self.control.log_new_data(new_nums)
