@@ -49,9 +49,6 @@ class Owen:
         self.control = control
 
     async def read_owen_data(self):
-        #if not self.control.makhina.wip:
-         #   return
-        
         print("read from owen")
         '''new_nums = [random.randint(0, 1000) for _ in range(4)]
         self.control.log_new_data(new_nums)
@@ -60,14 +57,12 @@ class Owen:
         print(owen_inputs)
         for inpt in owen_inputs:
                 try:
-                    #new_data = await self.server.connection.read_holding_registers(owen_addres, 32, 2)
                     new_data = await self.server.connection.read_holding_registers(owen_addres, (inpt-1)*6, 2)
                     print("read from register:", new_data)
                     pointer_index, data = new_data
-                    #data = new_data[0]
                     print("data", data)
                     new_num = float(str(data)[:-pointer_index] + "." + str(data)[:pointer_index])
-                    #new_num = data / 10
+                    self.control.owen_is_broken = False
                 except Exception as e:
                     print(e, 'OWEN is broken')
                     self.control.owen_is_broken = True
